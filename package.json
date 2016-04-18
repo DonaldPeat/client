@@ -17,7 +17,7 @@
   },
   "scripts": {
     "start": "webpack-dev-server --inline --hot",
-    "build": "gulp build",
+    "build": "webpack",
     "postinstall": "typings install",
     "test": "node --max-old-space-size=4096 node_modules/karma/bin/karma start"
   },
