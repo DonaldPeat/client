@@ -15,6 +15,8 @@ import {instrumentStore} from '@ngrx/devtools';
 
 //app
 import {AppContainer} from "./app/core/components/app.container.ts";
+import {actionLog, stateLog} from "./app/common/middleware";
+import {core} from "./app/core/store/core.reducer";
 
 
 /*
@@ -38,5 +40,8 @@ bootstrap(AppContainer, [
   provide(APP_BASE_HREF, { useValue: '/' }),
   provide(LocationStrategy, { useClass: PathLocationStrategy }),
   provide(PLATFORM_DIRECTIVES, { useValue: MATERIAL_DIRECTIVES, multi: true }),
+  provideStore({ core }),
+  usePreMiddleware(actionLog),
+  usePostMiddleware(stateLog),
   instrumentStore(),
 ]);
