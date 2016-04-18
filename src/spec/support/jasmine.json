@@ -1,0 +1,10 @@
+{
+  "spec_dir": "dist/app",
+  "spec_files": [
+    "*.js"
+  ],
+  "helpers": [
+    "helpers/test-helper.js",
+    "node_modules/rxjs/testing/*.js"
+  ]
+}
