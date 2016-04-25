@@ -2,6 +2,7 @@ var webpack = require('webpack');
 var path = require('path');
 var jasminePlugin = require('jasmine-webpack-plugin');
 var tsConfPath = path.join(__dirname, 'tsconfig.json');
+var ignorePlugin = new webpack.IgnorePlugin(/src\/app\/*.(js|map)$/);
 
 module.exports = {
     /*
@@ -20,7 +21,8 @@ module.exports = {
         filename: 'app.js'
     },
     plugins: [
-        new webpack.optimize.CommonsChunkPlugin('vendor', 'deps.js')
+        new webpack.optimize.CommonsChunkPlugin('vendor', 'deps.js'),
+        ignorePlugin
 
     ],
     resolve: {
