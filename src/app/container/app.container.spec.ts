@@ -1,4 +1,4 @@
-import {it, describe, expect, TestComponentBuilder, beforeEachProviders, injectAsync} from "angular2/testing";
+import {it, describe, expect, TestComponentBuilder, beforeEachProviders, inject, async} from "angular2/testing";
 import {Component} from "angular2/core";
 import {DOM} from "angular2/src/platform/dom/dom_adapter";
 import {provideStore} from "@ngrx/store";
@@ -11,8 +11,9 @@ describe('AppContainer', ()=> {
     TestComponentBuilder
   ]);
 
-  it('should work',
-    injectAsync([ TestComponentBuilder ], (tcb: TestComponentBuilder) => {
+  
+    it('should work',
+    inject([ TestComponentBuilder ], (tcb: TestComponentBuilder) => {
       return tcb.createAsync(TestECC)
                 .then(rootTC => {
                   rootTC.detectChanges();

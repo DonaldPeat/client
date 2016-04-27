@@ -4,7 +4,7 @@ $md-font-url: "../../../assets/font/";
 @import "node_modules/ng2-material/source/all.scss";
 
 .app-wrapper {
-  background-color: #28292B;
+  background-color: $almost-white;
   font-family: 'Raleway';
   font-size: 24px;;
   font-weight: 300;

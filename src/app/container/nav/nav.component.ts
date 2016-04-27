@@ -16,8 +16,7 @@ import {
 
 const NavMetadata: ComponentMetadata = new ComponentMetadata({
   selector       : 'rcv-nav',
-  styles         : [ require('./navbar.scss') ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  styles         : [ require( './navbar.scss') ],
   template       : `
     <div layout="row" layout-align="space-between stretch" class="nav-wrapper">
         <div md-button (click)="toggleMenu.emit()" layout="column" layout-align="center" class="menu-toggle-button" [class.open]="!menuOpen">
