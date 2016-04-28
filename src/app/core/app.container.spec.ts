@@ -2,12 +2,12 @@ import {it, describe, expect, TestComponentBuilder, beforeEachProviders, inject,
 import {Component} from "angular2/core";
 import {DOM} from "angular2/src/platform/dom/dom_adapter";
 import {provideStore} from "@ngrx/store";
-import {AppContainer} from "./app.container.ts";
-import {core} from "../store/core.reducer";
+import {AppContainer} from "./app.container";
+
 
 describe('AppContainer', ()=> {
   beforeEachProviders(()=> [
-    provideStore({core}),
+
     TestComponentBuilder
   ]);
 
