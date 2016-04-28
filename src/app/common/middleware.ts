@@ -11,7 +11,7 @@ import * as _ from "lodash";
 export const actionLog : Middleware = actions => {
   return actions.do(val => {
     if (val.payload){
-      console.info(`DISPATCHED ACTION: ${val.type}`); console.log("payload:"); console.log(val.payload);
+      console.info(`DISPATCHED ACTION: ${val.type}`);
     } else {
       console.info(`DISPATCHED ACTION: ${val.type}`);
     }

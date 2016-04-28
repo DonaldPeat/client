@@ -8,16 +8,16 @@ import { RouteParams } from '@ngrx/router';
 import { AppActions } from './app.reducer';
 import { AppState } from './app.state';
 import { Poll } from '../models/poll';
+import { Polls } from '../models/polls';
 
 
 @Injectable()
-export class AppService
-{
+export class AppService {
   public menuOpen$: Observable<boolean>;
   public activePoll$: Observable<Poll>;
   private _actions$: Subject<Action> = BehaviorSubject.create();
 
-  constructor( private _store: Store<any>, private _params: RouteParams ) {
+  constructor( private _store: Store<any>, private _params: RouteParams, private polls: Polls ) {
     const state$: Observable<AppState> = this._store.select( 'app' );
 
     //observable public fields 
@@ -25,7 +25,10 @@ export class AppService
     this.activePoll$ = state$.map( state => state.activePoll );
 
     let pollChanges = this._params.filter(params => params.pollId !== undefined)
-                                  .map(params => ({type: AppActions.SET_ACTIVE_POLL, payload:params.pollId})),
+                          .flatMap(params => this.polls.load(params.pollId))
+                          .map(params => ({type: AppActions.SET_ACTIVE_POLL, payload:params.pollId})),
+
+
 
         menuToggles = this._actions$.filter(action => action.type === AppActions.TOGGLE_MENU );
 

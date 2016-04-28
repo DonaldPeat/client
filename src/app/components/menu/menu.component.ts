@@ -10,7 +10,7 @@ import {Component, HostBinding, Input, OnInit, ChangeDetectionStrategy} from "an
     <div>?</div>
 
   `,
-  styles: [require('./menu.scss')],
+  styles: [require( './menu.scss')],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MenuComponent implements OnInit {

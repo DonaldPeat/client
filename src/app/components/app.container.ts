@@ -4,7 +4,7 @@ import {AsyncPipe} from "angular2/common";
 import {Devtools} from '@ngrx/devtools';
 import {NavComponent} from "./nav/nav.component";
 import { MenuComponent } from './menu/menu.component';
-import { AppService } from './app.service';
+import { AppService } from '../state/app.service';
 
 @Component({
   selector   : "rcv-app",
@@ -12,7 +12,6 @@ import { AppService } from './app.service';
   directives : [ NavComponent, RouterLink, MenuComponent, Devtools ],
   encapsulation: ViewEncapsulation.None,
   providers: [AppService],
-  pipes: [AsyncPipe],
   template: `
      <div layout="column" layout-fill class="app-wrapper">
        <rcv-nav [menuOpen]="state.menuOpen$ | async" (toggleMenu)="state.toggleMenu()"></rcv-nav>
@@ -27,7 +26,8 @@ import { AppService } from './app.service';
 })
 export class AppContainer implements OnInit {
   private helloWorldMsg: string;
-  constructor(private state: AppService){}
+  constructor(private state: AppService){
+  }
   
   ngOnInit() {
 
