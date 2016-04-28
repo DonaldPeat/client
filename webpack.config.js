@@ -14,7 +14,7 @@ module.exports = {
         app: './src/boot.ts',
         vendor: './src/vendor.ts'
     },
-    devtool: 'source-map',
+    devtool: 'cheap-module-eval-source-map',
     output: {
         path: path.resolve(__dirname, "dist"),
         publicPath: '/js/',

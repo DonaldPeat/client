@@ -19,9 +19,9 @@ testing.setBaseTestProviders(
     browser.TEST_BROWSER_PLATFORM_PROVIDERS,
     browser.TEST_BROWSER_APPLICATION_PROVIDERS);
 
-require('./src/spec/support/jasmine.json');
-require('./src/spec/helpers/marble-testing');
-require('./src/spec/helpers/test-helper');
+require('./src/tools/support/jasmine.json');
+require('./src/tools/helpers/marble-testing');
+require('./src/tools/helpers/test-helper');
 
 
 
