@@ -1,10 +1,14 @@
-import {Component, OnInit, ViewEncapsulation, ChangeDetectionStrategy} from "angular2/core";
+import {
+    Component, OnInit, ViewEncapsulation, ChangeDetectionStrategy, ViewChild, ElementRef, AfterViewInit
+} from "angular2/core";
 import {RouterLink, ROUTER_DIRECTIVES} from "angular2/router";
 import {AsyncPipe} from "angular2/common";
 import {Devtools} from '@ngrx/devtools';
 import {NavComponent} from "./nav/nav.component";
 import { MenuComponent } from './menu/menu.component';
 import { AppService } from '../state/app.service';
+import * as d3 from "d3";
+import { Polls } from '../models/polls';
 
 @Component({
   selector   : "rcv-app",
@@ -20,17 +24,19 @@ import { AppService } from '../state/app.service';
           <route-view></route-view>
         </div>  
       </div>
-      <ngrx-devtools style="font-size:0.5em;"></ngrx-devtools>
       
   `,
 })
-export class AppContainer implements OnInit {
-  private helloWorldMsg: string;
+export class AppContainer implements AfterViewInit {
+
   constructor(private state: AppService){
-  }
-  
-  ngOnInit() {
 
   }
+  
+  ngAfterViewInit() {
+
+        
+  };
 }
+
 

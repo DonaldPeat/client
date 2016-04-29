@@ -22,19 +22,18 @@ export class AppService {
 
     //observable public fields 
     this.menuOpen$   = state$.map( state => state.menuOpen );
-    this.activePoll$ = state$.map( state => state.activePoll );
-
-    let pollChanges = this._params.filter(params => params.pollId !== undefined)
-                          .flatMap(params => this.polls.load(params.pollId))
-                          .map(params => ({type: AppActions.SET_ACTIVE_POLL, payload:params.pollId})),
 
 
+    let menuToggles = this._actions$.filter(action => action.type === AppActions.TOGGLE_MENU );
 
-        menuToggles = this._actions$.filter(action => action.type === AppActions.TOGGLE_MENU );
+    Observable.merge( menuToggles ).subscribe( action => this._store.dispatch( action ) );
+    
+   /* NOTE: For now (with just the one action type), the above line is exactly equivalent to:
 
-    Observable.merge( menuToggles, pollChanges )
-              .subscribe( action => this._store.dispatch( action ) );
-
+    this._actions$.filter(action => action.type === AppActions.TOGGLE_MENU )
+        .subscribe( action => this._store.dispatch( action ) );
+    */
+    
     Object.freeze( this );
   }
 

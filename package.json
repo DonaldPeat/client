@@ -18,7 +18,7 @@
     "url": "https://github.com/RCVSim/client"
   },
   "scripts": {
-    "start": "concurrently \"json-server testdata.json \"   \"webpack-dev-server --inline --hot\"",
+    "start": "webpack-dev-server --inline --hot",
     "build": "webpack",
     "postinstall": "typings install",
     "test": "node --max-old-space-size=4096 node_modules/karma/bin/karma start"
@@ -61,7 +61,7 @@
     "source-map": "^0.5.5",
     "tsimmutable": "^0.4.1",
     "typescript": "1.8.9",
-    "typings": "^0.7.9",
+    "typings": "^0.8.1",
     "uglify-js": "^2.6.2",
     "webpack": "^1.12.14",
     "webpack-dev-server": "^1.14.1",
