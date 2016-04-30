@@ -23,7 +23,6 @@ export class AppService {
     //observable public fields 
     this.menuOpen$   = state$.map( state => state.menuOpen );
 
-
     let menuToggles = this._actions$.filter(action => action.type === AppActions.TOGGLE_MENU );
 
     Observable.merge( menuToggles ).subscribe( action => this._store.dispatch( action ) );
