@@ -20,6 +20,10 @@ export class VoteInputContainer implements AfterViewInit {
   candidates$: Observable<string[]>;
   constructor(private polls: Polls){
     this.poll$ = this.polls.load("asdf").take(1);
+    this.candidates$ = this.poll$.map(function(poll){
+    return poll.candidates;
+  });
+
     this.candidates$ = this.poll$.map(poll => poll.candidates);
 
     this.poll$.subscribe(poll => {
@@ -32,7 +36,6 @@ export class VoteInputContainer implements AfterViewInit {
     });
 
   }
-
 
 
   ngAfterViewInit() {
