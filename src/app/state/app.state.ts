@@ -18,12 +18,13 @@ export interface AppStateFunctions {
   withActivePoll(activePoll:string): this;
 }
 
-export interface AppState extends AppStateAttrs, AppStateFunctions {}
+export interface AppState extends AppStateAttrs, AppStateFunctions { }
   
   
 
 const DEFAULTS: AppStateAttrs = {
- menuOpen:  false , activePoll:  null};
+ menuOpen:  false , activePoll:  null
+};
 
 
 export class AppStateRecord extends Record<AppStateAttrs>(DEFAULTS) implements AppState {

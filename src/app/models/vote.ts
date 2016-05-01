@@ -47,7 +47,7 @@ export class VoteRecord extends Record<VoteAttrs>(DEFAULTS) implements Vote {
 
 }
 
-export type VoteInput = {timestamp: string, choices:string[]};
+export type VoteInput = {timestamp: string | Moment, choices:string[]};
 
 export function vote(input: VoteInput | VoteAttrs): Vote {
   if (input instanceof VoteRecord) return input;

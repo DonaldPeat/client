@@ -12,10 +12,10 @@ import { OrderedSet } from "immutable";
 @Component({
   selector: 'results-inner',
   template: `
-     <div><span><Button (click)="getPrevRound();">Previous Round</Button></span><Button (click)="getNextRound();" >Next Round</Button></div>
+     <div class="results-wrapper"><span><Button (click)="getPrevRound();">Previous Round</Button></span><Button (click)="getNextRound();" >Next Round</Button></div>
       <div>The total number of votes: {{getTotalVotes()}}</div>
     <div *ngFor="#cand of poll.candidates; #i = index">
-      <div>{{cand.name}}: <span>{{candVotes[i]}}</span> </div>
+      <div >{{cand.name}}: <span>{{candVotes[i]}}</span> </div>
     </div>
 
   `
