@@ -11,7 +11,8 @@ export interface CandidateAttrs {
   id: string; 
   name: string; 
   photo: string; 
-  allyVotes: Map<string, number>; 
+  allyVotes: Map<string, number>;
+  otherVotes: number[];
 }
  
   
@@ -20,6 +21,7 @@ export interface CandidateFunctions {
   withName(name:string): this;
   withPhoto(photo:string): this;
   withAllyVotes(allyVotes:Map<string, number>): this;
+  withOtherVotes(otherVotes:number[]): this;
 }
 
 export interface Candidate extends CandidateAttrs, CandidateFunctions {}
@@ -27,14 +29,15 @@ export interface Candidate extends CandidateAttrs, CandidateFunctions {}
   
 
 const DEFAULTS: CandidateAttrs = {
- id:  null, name:  null, photo:  null, allyVotes:  Map<string, number>() };
+ id:  null, name:  null, photo:  null, allyVotes:  Map<string, number>(), otherVotes: [] };
 
 
 export class CandidateRecord extends Record<CandidateAttrs>(DEFAULTS) implements Candidate {
   public id: string; 
   public name: string; 
   public photo: string; 
-  public allyVotes: Map<string, number>; 
+  public allyVotes: Map<string, number>;
+  public otherVotes: number[];
 
   public static forInput(input?:CandidateAttrs): Candidate {
     return input && input instanceof CandidateRecord ? input : new CandidateRecord(input);
@@ -60,6 +63,11 @@ export class CandidateRecord extends Record<CandidateAttrs>(DEFAULTS) implements
   public withAllyVotes(allyVotes: Map<string, number>): this { 
      return <this>this.set('allyVotes', allyVotes);
   }
+
+  public withOtherVotes(otherVotes: number[]): this {
+    return <this>this.set('otherVotes',otherVotes);
+  }
+
 }
 
 export type CandidateInput = {id: string, name:string, photo: string};
@@ -70,6 +78,7 @@ export function candidate(input: CandidateInput | CandidateAttrs): Candidate {
     id: input.id,
     name: input.name,
     photo: input.photo,
-    allyVotes: Map<string, number>()
+    allyVotes: Map<string, number>(),
+    otherVotes: []
   });
 }
