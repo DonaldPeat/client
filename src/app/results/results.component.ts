@@ -12,10 +12,17 @@ import { OrderedSet } from "immutable";
 @Component({
   selector: 'results-inner',
   template: `
-     <div class="results-wrapper"><span><Button (click)="getPrevRound();">Previous Round</Button></span><Button (click)="getNextRound();" >Next Round</Button></div>
+     <div>
+        <span>
+            <button (click)="progressToPrevRound();">Previous Round</button>
+            <button (click)="progressToNextRound();" >Next Round</button>
+            <button (click)="progressToWinner();">End Result</button>
+        </span>
+     </div>
+     
       <div>The total number of votes: {{getTotalVotes()}}</div>
-    <div *ngFor="#cand of poll.candidates; #i = index">
-      <div >{{cand.name}}: <span>{{candVotes[i]}}</span> </div>
+      <div *ngFor="#cand of poll.candidates #i = index">
+        <div>{{cand.name}}: <span>{{candVotes[i]}}</span> </div>
     </div>
 
   `
@@ -25,76 +32,89 @@ export class ResultsDumbComponent implements OnInit {
 
   private votes: Vote[];
   private candVotes: number[];
-  private candNames: string[];
-  private resultHistory: Object[];
+  private candIds: string[];
+  private progressHistory: {candIdsArray: string[], candVotesArray: number[]}[];
+  private originalCandIds: string[];
 
   ngOnInit(){
     let cands = this.poll.candidates.toJS(),
         votes = this.poll.votes.toJS();
 
+    this.candIds = cands.map(cand => cand.id);
+    this.originalCandIds = cands.map(cand => cand.id);
+
     this.votes = this.poll.votes.toJS();
 
-    this.candNames = new Array(cands.length);
+    this.candVotes = this.getVotes(this.candIds);
 
-    for (let i = 0 ; i < cands.length ; i++) {
-      this.candNames[i] = cands[i].id;
-    }
+    this.progressHistory = [];
 
-    this.candVotes = this.getVotes(this.candNames);
-
-    this.resultHistory = [];
-
-    debugger;
   }
 
   getVotes(candIds: string[]): number[] {
-    var sum = new Array(candIds.length).fill(0);
+    var candVoteResult = new Array(candIds.length).fill(0);
 
-    for ( let userVotes of this.votes ) {
-      var userChoices: OrderedSet<String> = userVotes.choices;
+    for ( let userVote of this.votes ) {
+      var userVoteChoices: OrderedSet<String> = userVote.choices;
 
-      for ( let n of userChoices ) {
-        let number = candIds.indexOf(n);
-        if ( number != -1 ) {
-          sum[number] += 1;
+      for ( let choice of userVoteChoices ) {
+        let cand = candIds.indexOf(choice);
+        if ( cand != -1 ) {
+          candVoteResult[cand] += 1;
           break;
         }
       }
 
     }
-
-    return sum;
+    return candVoteResult;
   }
 
-  getNextRound() {
-    this.resultHistory.push({
-      NameArray: this.candNames,
-      VoteArray: this.candVotes
-    });
-    console.log(this.resultHistory);
+  progressToNextRound() {
+    var highestVoteValue = Math.max.apply(Math,this.candVotes);
 
-    var minValue = Math.min.apply(Math,this.candVotes.filter( x => { return x !== 0; }));
+    if ( this.getTotalVotes()*0.5 > highestVoteValue ) {
 
-    for( let i = 0 ; i < this.candVotes.length ; i++ ) {
-      if (this.candVotes[i] == minValue || this.candVotes[i] == 0) {
-        this.candNames[i] = null;
+      //Clone-ing the object here, otherwise it would just modify the object.
+      this.progressHistory.push(JSON.parse(JSON.stringify({
+        candIdsArray: this.candIds,
+        candVotesArray: this.candVotes
+      })));
+
+      var lowestVoteValue = Math.min.apply(Math, this.candVotes.filter(x => {return x !== 0;}));
+
+      for (let i = 0; i < this.candVotes.length; i++) {
+        if (this.candVotes[i] == lowestVoteValue || this.candVotes[i] == 0) {
+          this.candIds[i] = null;
+        }
       }
+
+      //Recount the votes for all the candidates
+      this.candVotes = this.getVotes(this.candIds);
+
     }
 
-    this.candVotes = this.getVotes(this.candNames);
 
   }
 
-  getPrevRound() {
-    if (this.resultHistory.length != 0) {
-      var prevRound = this.resultHistory.pop();
-      this.candNames = prevRound.NameArray;
-      this.candVotes = prevRound.VoteArray;
-      console.log("test2",this.resultHistory);
+  progressToPrevRound() {
+    if (this.progressHistory.length != 0) {
+      var prevRound = this.progressHistory.pop();
+      this.candIds = prevRound.candIdsArray;
+      this.candVotes = prevRound.candVotesArray;
+
     }
   }
 
-  getTotalVotes() {
+  progressToWinner() {
+    var maxValue = Math.max.apply(Math,this.candVotes);
+    while ( this.getTotalVotes()*0.5 > maxValue ) {
+      console.log(this.getTotalVotes()*0.5, maxValue);
+      this.progressToNextRound();
+      debugger;
+    }
+  }
+
+  getTotalVotes(): number {
     return this.votes.length;
   }
   
