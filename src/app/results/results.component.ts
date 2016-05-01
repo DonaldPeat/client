@@ -71,16 +71,17 @@ export class ResultsDumbComponent implements OnInit {
 
   progressToNextRound() {
     var highestVoteValue = Math.max.apply(Math,this.candVotes);
+    console.log(this.candIds);
 
     if ( this.getTotalVotes()*0.5 > highestVoteValue ) {
 
       //Clone-ing the object here, otherwise it would just modify the object.
-      this.progressHistory.push(JSON.parse(JSON.stringify({
+      this.progressHistory.push({
         candIdsArray: this.candIds,
         candVotesArray: this.candVotes
-      })));
+      });
 
-      var lowestVoteValue = Math.min.apply(Math, this.candVotes.filter(x => {return x !== 0;}));
+      var lowestVoteValue = Math.min(...this.candVotes.filter(x => {return x !== 0;}));
 
       for (let i = 0; i < this.candVotes.length; i++) {
         if (this.candVotes[i] == lowestVoteValue || this.candVotes[i] == 0) {
@@ -106,7 +107,7 @@ export class ResultsDumbComponent implements OnInit {
   }
 
   progressToWinner() {
-    var maxValue = Math.max.apply(Math,this.candVotes);
+    var maxValue = Math.max(...this.candVotes);
     while ( this.getTotalVotes()*0.5 > maxValue ) {
       console.log(this.getTotalVotes()*0.5, maxValue);
       this.progressToNextRound();
