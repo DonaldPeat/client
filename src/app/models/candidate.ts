@@ -1,84 +1,59 @@
+import * as _ from 'lodash';
+import { Vote } from './vote';
+import * as SI from 'seamless-immutable';
 
-
-import {Record, Map} from 'immutable'; 
-import * as _ from 'lodash'; 
-/** 
+/**
  *
  *
  **/
- 
-export interface CandidateAttrs {
-  id: string; 
-  name: string; 
-  photo: string; 
-  allyVotes: Map<string, number>;
-  otherVotes: number[];
-}
- 
-  
-export interface CandidateFunctions { 
-  withId(id:string): this;
-  withName(name:string): this;
-  withPhoto(photo:string): this;
-  withAllyVotes(allyVotes:Map<string, number>): this;
-  withOtherVotes(otherVotes:number[]): this;
+
+
+
+
+export interface ICandidate {
+  id: string;
+  name: string;
+  photo: string;
+  score: number;
+  eliminated: boolean;
+  removed: boolean;
 }
 
-export interface Candidate extends CandidateAttrs, CandidateFunctions {}
-  
-  
 
-const DEFAULTS: CandidateAttrs = {
- id:  null, name:  null, photo:  null, allyVotes:  Map<string, number>(), otherVotes: [] };
+export class Candidate implements ICandidate {
+  public eliminated: boolean = false;
+  public removed: boolean = false;
+  public score: number;
 
+  constructor(public id: string, public name: string, public photo: string){}
 
-export class CandidateRecord extends Record<CandidateAttrs>(DEFAULTS) implements Candidate {
-  public id: string; 
-  public name: string; 
-  public photo: string; 
-  public allyVotes: Map<string, number>;
-  public otherVotes: number[];
+  public static mutable(input?:  Candidate | ICandidate): Candidate {
 
-  public static forInput(input?:CandidateAttrs): Candidate {
-    return input && input instanceof CandidateRecord ? input : new CandidateRecord(input);
+    if (input && input instanceof Candidate) {
+      if (SI.isImmutable(input)){
+        let imm: SeamlessImmutable.ImmutableObjectMethods<Candidate> = <SeamlessImmutable.ImmutableObjectMethods<Candidate>> input;
+        return <Candidate> imm.asMutable({deep:true});
+      } else return <Candidate> input;
+    }
+
+    if (!input) input = <ICandidate>{};
+
+    let id = input && input.id ? input.id : '',
+        name = input && input.name ? input.name : '',
+        photo = input && input.photo ? input.photo : '';
+
+    return new Candidate(id, name, photo);
   }
 
-  constructor(input?: CandidateAttrs){
-    let pass = input ? _.clone(input) : undefined;
-    super(pass);
-  }
-  
-  public withId(id: string): this { 
-     return <this>this.set('id', id);
+  public static immutable(input?: Candidate | ICandidate): ImmutableCandidate {
+    return SI<Candidate>(Candidate.mutable(input), {prototype: Candidate.prototype});
   }
 
-  public withName(name: string): this { 
-     return <this>this.set('name', name);
-  }
 
-  public withPhoto(photo: string): this { 
-     return <this>this.set('photo', photo);
-  }
-
-  public withAllyVotes(allyVotes: Map<string, number>): this { 
-     return <this>this.set('allyVotes', allyVotes);
-  }
-
-  public withOtherVotes(otherVotes: number[]): this {
-    return <this>this.set('otherVotes',otherVotes);
-  }
+  public isActive = () => {
+    return ! (this.eliminated || this.removed);
+  };
 
 }
 
-export type CandidateInput = {id: string, name:string, photo: string};
-
-export function candidate(input: CandidateInput | CandidateAttrs): Candidate {
-  if (input instanceof  CandidateRecord) return input;
-  return new CandidateRecord({
-    id: input.id,
-    name: input.name,
-    photo: input.photo,
-    allyVotes: Map<string, number>(),
-    otherVotes: []
-  });
-}
+export type ImmutableCandidate = Candidate & SeamlessImmutable.ImmutableObjectMethods<ICandidate>;

@@ -1,58 +1,30 @@
+import * as SI from 'seamless-immutable';
 
 
-import {Record, OrderedSet} from 'immutable'; 
-import * as _ from 'lodash';
-import * as moment from 'moment';
-import { Moment } from 'moment'; 
-
-/** 
- *
- *
- **/
-
-
-export interface VoteAttrs {
-  timestamp: Moment; 
-  choices: OrderedSet<string>; 
+export interface IVote {
+  choices: string[]
 }
 
-export interface VoteFunctions { 
-  withTimestamp(timestamp:Moment): this;
-  withChoices(choices:OrderedSet<string>): this;
-}
+export class Vote implements IVote, SeamlessImmutable.ImmutableObjectMethods<IVote> {
 
-export interface Vote extends VoteAttrs, VoteFunctions {}
+  constructor(public choices: string[]){}
   
-  
+  public static mutable(input?:  Vote | IVote): Vote {
 
-const DEFAULTS: VoteAttrs = {
- timestamp:  null, choices:  OrderedSet<string>() };
+    if (input && input instanceof Vote) {
+      if (SI.isImmutable(input)){
+        let imm: SeamlessImmutable.ImmutableObjectMethods<Vote> = <SeamlessImmutable.ImmutableObjectMethods<Vote>> input;
+        return <Vote> imm.asMutable({deep:true});
+      } else return <Vote> input;
+    } else if (!input || !input.choices){
+      throw Error("Tried to create vote without choices")
+    }
 
-
-export class VoteRecord extends Record<VoteAttrs>(DEFAULTS) implements Vote {
-  public timestamp: Moment; 
-  public choices: OrderedSet<string>; 
-
-  constructor(input?: VoteAttrs){
-    super(input);
-  }
-  
-  public withTimestamp(timestamp: Moment): this { 
-     return <this>this.set('timestamp', timestamp);
+    //now we know we have an input with choices
+    return new Vote(input.choices);
   }
 
-  public withChoices(choices: OrderedSet<string>): this { 
-     return <this>this.set('choices', choices);
+  public static immutable(input?: Vote | IVote): Vote {
+    return SI<Vote>(Vote.mutable(input), {prototype: Vote.prototype});
   }
-
-}
-
-export type VoteInput = {timestamp: string | Moment, choices:string[]};
-
-export function vote(input: VoteInput | VoteAttrs): Vote {
-  if (input instanceof VoteRecord) return input;
-  return new VoteRecord({
-    choices: OrderedSet.of(...input.choices),
-    timestamp:<Moment>moment(input.timestamp)
-  });
 }
