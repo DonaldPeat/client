@@ -6,7 +6,8 @@
         "sourceMap": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "outDir": "./.idea-out"
     },
 
     "awesomeTypescriptLoaderOptions": {

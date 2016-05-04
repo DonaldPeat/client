@@ -1,5 +1,6 @@
 import {Reducer, Action} from '@ngrx/store';
-import { AppState, AppStateRecord } from './app.state';
+import { AppState, AppStateRecord, ImmutableAppState } from './app.state';
+import { ImmutableArray } from '../common/interfaces';
 
 export const AppActions = {
     TOGGLE_MENU: "@epub:app::TOGGLE_MENU",
@@ -7,15 +8,15 @@ export const AppActions = {
 
 };
 
-export const app: Reducer<AppState> = (state: AppStateRecord = new AppStateRecord(), action: Action)=> {
+export const app: Reducer<AppState> = (state: ImmutableAppState = AppState.immutable(), action: Action)=> {
  
   switch(action.type){
     case AppActions.TOGGLE_MENU:
       //TODO
-      return state.withMenuOpenToggled();
+      return state.set('menuOpen', !state.menuOpen);
     case AppActions.SET_ACTIVE_POLL:
       //TODO
-      return state.withActivePoll(action.payload);
+      return state.set('activePoll', action.payload);
     default: 
       return state;
   }

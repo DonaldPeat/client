@@ -1,8 +1,7 @@
 import {
     Component, OnInit, ViewEncapsulation, ChangeDetectionStrategy, ViewChild, ElementRef, AfterViewInit
-} from "angular2/core";
-import {RouterLink, ROUTER_DIRECTIVES} from "angular2/router";
-import {AsyncPipe} from "angular2/common";
+} from "@angular/core";
+import {AsyncPipe} from "@angular/common";
 import {Devtools} from '@ngrx/devtools';
 import {NavComponent} from "./nav/nav.component";
 import { MenuComponent } from './menu/menu.component';
@@ -13,7 +12,7 @@ import { Polls } from '../models/polls';
 @Component({
   selector   : "rcv-app",
   styles  : [ require( './app.scss') ],
-  directives : [ NavComponent, RouterLink, MenuComponent, Devtools ],
+  directives : [ NavComponent, MenuComponent, Devtools ],
   encapsulation: ViewEncapsulation.None,
   providers: [AppService],
   template: `

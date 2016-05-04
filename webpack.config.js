@@ -1,8 +1,11 @@
 var webpack = require('webpack');
 var path = require('path');
 var jasminePlugin = require('jasmine-webpack-plugin');
-var tsConfPath = path.join(__dirname, 'tsconfig.json');
+var tsConfPath = path.join(__dirname, 'tsconfigwebpack.json');
 var ignorePlugin = new webpack.IgnorePlugin(/src\/app\/*.(js|map)$/);
+
+
+
 
 module.exports = {
     /*
@@ -14,7 +17,7 @@ module.exports = {
         app: './src/boot.ts',
         vendor: './src/vendor.ts'
     },
-    devtool: 'cheap-module-eval-source-map',
+    devtool: 'source-map',
     output: {
         path: path.resolve(__dirname, "dist"),
         publicPath: '/js/',
@@ -30,7 +33,7 @@ module.exports = {
     },
     module: {
         loaders: [
-            { test: /\.ts$/, exclude: /\.spec\.ts$/, loader: 'awesome-typescript-loader?tsconfig=' + tsConfPath },
+            { test: /\.ts$/, exclude: /\.spec\.ts$/, loader: 'awesome-typescript-loader'},
             { test: /\.json$/, loader: 'raw-loader' },
             { test: /\.html$/, loader: 'raw-loader' },
             { test: /\.css$/, loader: 'raw-loader' },

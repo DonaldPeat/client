@@ -1,6 +1,6 @@
-import { Injectable } from "angular2/core";
+import { Injectable } from "@angular/core";
 import { Subject } from "rxjs/Subject";
-import { BehaviorSubject } from "rxjs/subject/BehaviorSubject";
+import { BehaviorSubject } from "rxjs/BehaviorSubject";
 import { Observable } from 'rxjs/Observable';
 import { Store, Action } from '@ngrx/store';
 import { RouteParams } from '@ngrx/router';

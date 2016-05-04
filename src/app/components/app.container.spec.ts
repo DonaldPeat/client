@@ -1,6 +1,6 @@
-import {it, describe, expect, TestComponentBuilder, beforeEachProviders, inject, async} from "angular2/testing";
-import {Component} from "angular2/core";
-import {DOM} from "angular2/src/platform/dom/dom_adapter";
+import {it, describe, expect, beforeEachProviders, inject, async} from "@angular/core/testing";
+import {TestComponentBuilder} from "@angular/compiler/testing"
+import {Component} from "@angular/core";
 import {provideStore} from "@ngrx/store";
 import {AppContainer} from "./app.container";
 

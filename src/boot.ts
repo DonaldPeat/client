@@ -1,16 +1,14 @@
-///<reference path="../node_modules/angular2/typings/browser.d.ts"/>
 
 
 //angular
-import {provide, PLATFORM_DIRECTIVES} from "angular2/core";
-import {bootstrap} from "angular2/platform/browser";
-import {HTTP_PROVIDERS } from 'angular2/http';
-import { LocationStrategy, APP_BASE_HREF, PathLocationStrategy } from 'angular2/platform/common';
+import {provide, PLATFORM_DIRECTIVES} from "@angular/core";
+import {bootstrap} from "@angular/platform-browser-dynamic";
+import {HTTP_PROVIDERS } from '@angular/http';
+import { LocationStrategy, APP_BASE_HREF, PathLocationStrategy } from '@angular/common';
 
 
 
 //vendor
-import {MATERIAL_DIRECTIVES} from "ng2-material/all";
 import {provideStore, usePostMiddleware, usePreMiddleware} from '@ngrx/store';
 import {provideRouter} from '@ngrx/router';
 import {instrumentStore} from '@ngrx/devtools';
@@ -31,7 +29,6 @@ bootstrap(AppContainer, [
   Polls,
   provide(APP_BASE_HREF, { useValue: '/' }),
   provide(LocationStrategy, { useClass: PathLocationStrategy }),
-  provide(PLATFORM_DIRECTIVES, { useValue: MATERIAL_DIRECTIVES, multi: true }),
   provideStore({ app }),
   provideRouter(ROUTES),
   usePreMiddleware(actionLog),

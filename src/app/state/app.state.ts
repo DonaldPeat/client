@@ -1,56 +1,39 @@
-
-
-import {Record, List} from 'immutable'; 
+import * as SI from 'seamless-immutable';
 import * as _ from 'lodash'; 
 /** 
  *
  *
  **/
  
-export interface AppStateAttrs {
-  menuOpen: boolean; 
-  activePoll: string; 
-}
- 
-  
-export interface AppStateFunctions { 
-  withMenuOpenToggled(): this;
-  withActivePoll(activePoll:string): this;
+export interface IAppState {
+  menuOpen: boolean;
+  activePoll: string;
 }
 
-export interface AppState extends AppStateAttrs, AppStateFunctions { }
-  
-  
+export class AppState implements IAppState {
 
-const DEFAULTS: AppStateAttrs = {
- menuOpen:  false , activePoll:  null
-};
+  constructor(public menuOpen: boolean, public activePoll: string){ }
 
+  public static mutable(input?:  AppState | IAppState): AppState {
 
-export class AppStateRecord extends Record<AppStateAttrs>(DEFAULTS) implements AppState {
-  public menuOpen: boolean; 
-  public activePoll: string; 
+    if (input && input instanceof AppState) {
+      if (SI.isImmutable(input)){
+        let imm: SeamlessImmutable.ImmutableObjectMethods<AppState> = <SeamlessImmutable.ImmutableObjectMethods<AppState>> input;
+        return <AppState> imm.asMutable({deep:true});
+      } else return <AppState> input;
+    }
 
-  public static forInput(input?:AppStateAttrs): AppState {
-    return input && input instanceof AppStateRecord ? input : new AppStateRecord(input);
+    if (!input) input = <IAppState>{};
+
+    let menuOpen = input && input.menuOpen ? input.menuOpen : false;
+    let activePoll = input && input.activePoll ? input.activePoll : '';
+
+    return new AppState(menuOpen, activePoll);
   }
 
-  constructor(input?: AppStateAttrs){
-    let pass = input ? _.clone(input) : undefined;
-    super(pass);
+  public static immutable(input? : AppState | IAppState): ImmutableAppState {
+    return SI<AppState>(AppState.mutable(input));
   }
-  
-  public withMenuOpenToggled(): this { 
-     return <this>this.set('menuOpen', !this.menuOpen);
-  }
-
-  public withActivePoll(activePoll: string): this { 
-     return <this>this.set('activePoll', activePoll);
-  }
-
-
-
-
-
-
 }
+
+export type ImmutableAppState = AppState & SeamlessImmutable.ImmutableObjectMethods<AppState>;

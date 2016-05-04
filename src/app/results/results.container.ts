@@ -2,8 +2,7 @@
  * Created by moore on 4/27/2016.
  */
 
-import { Component } from 'angular2/core';
-import { ObservableWrapper } from 'angular2/src/facade/async';
+import { Component } from '@angular/core';
 import { Poll } from '../models/poll';
 import { Observable } from 'rxjs/Observable';
 import { Polls } from '../models/polls';
@@ -30,8 +29,9 @@ export class ResultsContainer {
   poll$: Observable<Poll>;
   constructor(private polls: Polls){
     let pollId = "asdf"; //in the finished app, we'll be getting this value from the URL
-
     this.poll$ = polls.load(pollId);
+    
+    
 
   }
   

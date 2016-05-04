@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterContentInit, Inject, AfterViewInit } from 'angular2/core';
+import { Component, OnInit, AfterContentInit, Inject, AfterViewInit } from '@angular/core';
 import { Polls } from '../models/polls';
 import { AppState } from '../state/app.state';
 import { Observable } from 'rxjs/Observable';

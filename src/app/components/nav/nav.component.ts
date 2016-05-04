@@ -6,7 +6,7 @@ import {
     Output,
     EventEmitter,
     ChangeDetectionStrategy
-} from "angular2/core";
+} from "@angular/core";
 
 
 /**

@@ -1,7 +1,9 @@
-import {it, describe, expect, TestComponentBuilder, beforeEachProviders, async, inject} from "angular2/testing";
 declare var hot, cold, expectObservable, expectSubscriptions;
-import {Component} from "angular2/core";
-import {DOM} from "angular2/src/platform/dom/dom_adapter";
+
+import {it, describe, expect, beforeEachProviders, async, inject} from "@angular/core/testing";
+import {TestComponentBuilder} from "@angular/compiler/testing"
+import {Component} from "@angular/core";
+import {getDOM} from "@angular//platform-browser/src/dom/dom_adapter";
 import {provideStore} from "@ngrx/store";
 import { ResultsDumbComponent } from './results.component';
 import { Observable } from 'rxjs/Observable';
@@ -27,7 +29,7 @@ describe( 'ResultsComponent', ()=> {
           resultsCmp: ResultsDumbComponent = <ResultsDumbComponent>root.debugElement.children[ 0 ].componentInstance;
 
       //expect that the number of elements with class .cand-name matches the number of candidates in the poll
-      expect( DOM.querySelectorAll( element, '.results-wrapper' ).length ).toEqual( 1 );
+      expect( getDOM().querySelectorAll( element, '.results-wrapper' ).length ).toEqual( 1 );
 
       expect(resultsCmp.poll.title).toEqual(mockPoll.title);
       
