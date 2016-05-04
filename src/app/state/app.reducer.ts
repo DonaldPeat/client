@@ -1,5 +1,5 @@
 import {Reducer, Action} from '@ngrx/store';
-import { AppState, AppStateRecord, ImmutableAppState } from './app.state';
+import { AppState, ImmutableAppState } from './app.state';
 import { ImmutableArray } from '../common/interfaces';
 
 export const AppActions = {

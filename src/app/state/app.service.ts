@@ -18,7 +18,7 @@ export class AppService {
   private _actions$: Subject<Action> = BehaviorSubject.create();
 
   constructor( private _store: Store<any>, private _params: RouteParams, private polls: Polls ) {
-    const state$: Observable<AppState> = this._store.select( 'app' );
+    const state$: Observable<AppState> = this._store.select<AppState>( 'app' );
 
     //observable public fields 
     this.menuOpen$   = state$.map( state => state.menuOpen );
