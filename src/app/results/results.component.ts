@@ -10,6 +10,8 @@ import { Observable } from 'rxjs/Observable';
 import { mutable, immutable } from '../common/mutability';
 import { CandidateBarComponent } from './candidate.bar.ts';
 
+
+
 /**
  * This component is "dumb" because it knows nothing about the rest of the application around it, just that it's going  
  * to be handed a Poll as an input. What it DOES know (but the "smart" components do not) is how to render a poll to the 
@@ -87,10 +89,10 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      *
      */
     const eliminated$ = round$.map( round =>
-            Array( round - 1 ).fill( 0 ).reduce( ( elims, i )=>  // "for i in range(0, round-1), given array of eliminated cands,"
-               elims.concat( [ this.findLoser( elims ).id ] ) // find candidate to eliminate and add them to the array
+            Array( round - 1 ).fill( 0 ).reduce( ( elims, i ) => // "for i in range(0, round-1), given an array of eliminated cands,"
+               elims.concat( [ this.findLoser( elims ).id ] ) // find next cand to eliminate and add them to the array
                 , [] ) // starting with an empty array  
-                // emit the array as the set of eliminated candidates.                   
+                // return the array, i.e. emit the array as the set of currently eliminated candidates.
     );
 
     /**
@@ -107,21 +109,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      */
     const votes$: Observable<{[id: string]: Vote[]}> = Observable.combineLatest(
         eliminated$, removed$,
-        ( elims, removeds ) => {
-          let inactives = _.union( elims, removeds ),
-              isActive  = ( id: string ) => !_.includes( inactives, id ),
-              init =  this.poll.candidates.reduce((dict, cand)=> { dict[cand.id]=[]; return dict;}, {});
-
-          return <{[id: string]: Vote[]}>this.poll.votes.reduce( ( dict, vote ) => {
-            for (let i = 0; i < vote.choices.length; i++) {
-              if (isActive( vote.choices[ i ] )) {
-                dict[ vote.choices[ i ] ].push( vote );
-                break;
-              }
-            }
-            return dict;
-          }, init );
-        }
+        ( elims, removeds ) => this.distributeVotes(_.union(elims, removeds))
     );
 
     /**
@@ -129,8 +117,14 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      * (note that this is necessary because the total number of votes will decrease as votes are exhausted)
      */
     const totalVotes$: Observable<number> =
-              votes$.map(dict => <number>_.values(dict).reduce((sum: number, arr: Array<any>) => sum + arr.length, 0));
+              votes$.map(dict => {
+                return _.reduce(dict, (sum = 0, votes, candId)=>{
+                  return sum + votes.length;
+                }, 0);
+              });
 
+    
+    
     /**
      * This is essentially a convenience stream too, coalescing values obtained from the other streams into a single
      * "state" construct that can be passed around / referenced in templates more easily.
@@ -156,7 +150,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
     this.totalVotes$ = totalVotes$;
     this.cands$ = cands$;
 
-/*  Use these for testing
+/* Use these for testing
     votes$.subscribe(x => {console.info('votes'); console.info(x);});
     eliminated$.subscribe(x => {console.info('elim'); console.info(x);});
     round$.subscribe(x => console.info(`ROUND ${x}`));
@@ -183,19 +177,31 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
                 .filter(cand => score(cand.id) == loScore)[0]; //TODO randomize
   }
 
-  private calcScores(cands: Candidate[], votes: Vote[], eliminated: string[]): {[candId:string]: number}{
-    let ret: {[candId:string]: number} = {},
-        isEliminated = (id:string) => _.includes((eliminated || []), id);
+  
+  
+  private distributeVotes(eliminated: string[]): {[candId:string]: Vote[]} {
+    let isEliminated = (id: string) => _.includes(eliminated, id),
+        initial =  <{[id: string]: Vote[]}> this.poll.candidates
+                                                .reduce((dict, cand)=> { dict[cand.id]=[]; return dict;}, {});
 
-    votes.forEach(vote => {
+    return this.poll.votes.reduce((dict, vote)=>{
       for (let i = 0; i < vote.choices.length; i++){
-        if (!isEliminated(vote.choices[i])) {
-          if (ret[vote.choices[i]] == undefined) ret[vote.choices[i]] = 0;
-          ret[vote.choices[i]] += 1;
-          break;
+        if (! isEliminated(vote.choices[i])) {
+          dict[vote.choices[i]].push(vote);
+          return dict;
         }
       }
-    });
-    return ret;
+      // if we get here, then the vote is exhausted, so leave it with the (eliminated) last choice. (or.... ? )
+      dict[vote.choices[0]].push(vote);
+      return dict;
+    }, initial);
+
+  }
+  
+  private calcScores(cands: Candidate[], votes: Vote[], eliminated: string[]): {[candId:string]: number}{
+    return <{[candId:string]: number}> _.transform(this.distributeVotes(eliminated), (result, votes, candId)=> {(
+      result[candId] = votes.length
+    )}
+    );
   }
 }
