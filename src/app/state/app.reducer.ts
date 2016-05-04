@@ -1,6 +1,5 @@
 import {Reducer, Action} from '@ngrx/store';
 import { AppState, ImmutableAppState } from './app.state';
-import { ImmutableArray } from '../common/interfaces';
 
 export const AppActions = {
     TOGGLE_MENU: "@epub:app::TOGGLE_MENU",

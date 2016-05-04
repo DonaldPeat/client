@@ -7,9 +7,8 @@ import * as _ from 'lodash';
 import { Subject } from 'rxjs/Subject';
 import { BehaviorSubject } from 'rxjs/Rx';
 import { Observable } from 'rxjs/Observable';
-import { mutable, immutable } from '../common/mutability';
+import { mutate } from '../common/mutability';
 import { CandidateBarComponent } from './candidate.bar.ts';
-
 
 
 /**
@@ -75,21 +74,15 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
     const round$ = this.roundClicks$.scan((result, change)=> result + change , 0);
 
     /**
-     * The number of eliminated candidates should always be one less than the current round, and which candidates have
-     * been eliminated must (for domain reasons) be a pure function of the choices specified in the votes and what round
-     * it is. So, with each new round, we take the original (immutable) data and run it through a pure function that
-     * determines the eliminate
+     * The number of eliminated candidates should always be one less than the current round. For obvious domain reasons,
+     * *which* n candidates have been eliminated in the n'th round must be a pure function of n and the choices in the votes.
      *
-     * You'd be correct in pointing out that we're doing (many times) more computation this way than we would be if we
-     * cached the results in some sort of "current state" array or other data structure. However, the computational cost
-     * is negligible here even for very large polls, and if it wasn't we could optimize in any number of ways (including
-     * caching results). Much more importantly, abandoning imperative manipulation of mutable local state in favor of
-     * defining the flow of the application declaratively makes it far easier to reason about (read: less prone to bugs)
-     * and more readable (once you get the hang of observables).
+     * So, we map each round to the result of a function that calls that pure function recursively n times and returns
+     * the result. 
      *
      */
     const eliminated$ = round$.map( round =>
-            Array( round - 1 ).fill( 0 ).reduce( ( elims, i ) => // "for i in range(0, round-1), given an array of eliminated cands,"
+            Array( round - 1 ).fill( "Horse's ass" ).reduce( ( elims, i ) => // "for i in range(0, round-1), given an array of eliminated cands,"
                elims.concat( [ this.findLoser( elims ).id ] ) // find next cand to eliminate and add them to the array
                 , [] ) // starting with an empty array  
                 // return the array, i.e. emit the array as the set of currently eliminated candidates.
@@ -117,14 +110,9 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      * (note that this is necessary because the total number of votes will decrease as votes are exhausted)
      */
     const totalVotes$: Observable<number> =
-              votes$.map(dict => {
-                return _.reduce(dict, (sum = 0, votes, candId)=>{
-                  return sum + votes.length;
-                }, 0);
-              });
+              votes$.map(dict => _.reduce(dict, (sum = 0, votes, candId)=>  sum + votes.length, 0) );
 
-    
-    
+        
     /**
      * This is essentially a convenience stream too, coalescing values obtained from the other streams into a single
      * "state" construct that can be passed around / referenced in templates more easily.
@@ -134,8 +122,8 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
         removed$,
         votes$,
         ( elims, removeds, votes ) =>
-            <Candidate[]> immutable(
-                mutable( this.poll ).candidates.map( cand => ({
+            <Candidate[]> mutate( this.poll.candidates, ( cands )=>
+                cands.map( cand => ( <Candidate> {
                   score     : votes[ cand.id ].length,
                   eliminated: _.includes( elims, cand.id ),
                   removed   : _.includes( removeds, cand.id ),
@@ -167,7 +155,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
 
   private findLoser(alreadyEliminated: string[]){
     let isEliminated = (id: string) => _.includes((alreadyEliminated || []), id),
-        scores = this.calcScores(this.poll.candidates, this.poll.votes, alreadyEliminated),
+        scores = this.calcScores(alreadyEliminated),
         score = (id: string) => scores[id] || 0;
 
     let loScore = Math.min(...this.poll.candidates.filter(cand => ! isEliminated(cand.id))
@@ -198,7 +186,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
 
   }
   
-  private calcScores(cands: Candidate[], votes: Vote[], eliminated: string[]): {[candId:string]: number}{
+  private calcScores(eliminated: string[]): {[candId:string]: number}{
     return <{[candId:string]: number}> _.transform(this.distributeVotes(eliminated), (result, votes, candId)=> {(
       result[candId] = votes.length
     )}

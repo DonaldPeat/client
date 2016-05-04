@@ -3,7 +3,7 @@
 import * as _ from 'lodash';
 import { Candidate, ICandidate } from './candidate';
 import * as SI from 'seamless-immutable';
-import { ImmutableArray } from '../common/interfaces';
+
 import { Vote, IVote } from './vote';
 
 /** 
