@@ -1,209 +1,177 @@
-import { Component, Input, OnInit } from 'angular2/core';
+import { Component, Input, OnInit, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import 'rxjs/Rx';
 import { Poll } from '../models/poll';
 import { Candidate } from '../models/candidate';
 import { Vote } from '../models/vote';
-import { OrderedSet } from "immutable";
 import * as _ from 'lodash';
+import { Subject } from 'rxjs/Subject';
+import { BehaviorSubject } from 'rxjs/Rx';
+import { Observable } from 'rxjs/Observable';
+import { mutable, immutable } from '../common/mutability';
+import { CandidateBarComponent } from './candidate.bar.ts';
 
 /**
- * This is the "dumb component" - it's "dumb" because it doesn't know anything about the rest of the application. It just 
- * knows it's going to get a poll as an input, and 
+ * This is the "dumb component" - it's "dumb" because it doesn't know anything about the rest of the application. It just
+ * knows it's going to get a poll as an input, and
  */
 
 @Component({
   selector: 'results-inner',
+  directives: [CandidateBarComponent],
   template: `
      <div>
         <span>
             <button (click)="progressToStart();">From Start</button>
-            <button (click)="progressToPrevRound();">Previous Round</button>
-            <button (click)="progressToNextRound();" >Next Round</button>
+            <button (click)="roundClicks$.next(-1);">Previous Round</button>
+            <strong>{{round$ | async}}</strong>
+            <button (click)="roundClicks$.next(1);" >Next Round</button>
             <button (click)="progressToWinner();">End Result</button>
         </span>
      </div>
      
-      <div>The total number of votes: {{getTotalVotes()}}</div>
-      <div *ngFor="#cand of poll.candidates #i = index">
-        <div>{{cand.name}}: <span>{{candVotes[i]}} {{printOtherVotes(cand)}}</span></div>
+      <div>The total number of votes: {{totalVotes$ | async}}</div>
+      <div *ngFor="#cand of cands$ | async">
+        <candidate-bar [candidate]="cand"></candidate-bar>
     </div>
 
   `
 })
-export class ResultsDumbComponent implements OnInit {
+export class ResultsDumbComponent implements OnInit, AfterViewInit {
   @Input() poll: Poll;
 
-  private votes: Vote[];
-  private candVotes: number[];
-  private candIds: string[];
-  private progressHistory: {candIdsArray: string[], candVotesArray: number[]}[];
-  private originalCandIds: string[];
-  private candOtherVotes: Array[];
-  private candNames: string[];
+  private cands$: Observable<Candidate[]>;
+  private round$: Observable<number>;
+  private totalVotes$: Observable<number>;
 
+  private roundClicks$: Subject<number> = BehaviorSubject.create();
+
+  /**
+   * The goal here is to specify the entire execution of the application declaratively, vis a vis our definitions of
+   * streams of user input and resultant streams of application state. The design challenge, then, is to identify these
+   * streams and codify the causal relationships between them into our "reactive architecture"
+   */
   ngOnInit(){
-    let cands = this.poll.candidates.toJS(),
-        votes = this.poll.votes.toJS();
+    /**
+     * https://github.com/Reactive-Extensions/RxJS/blob/master/doc/api/core/operators/scan.md
+     * Given current round is 3, user clicks previous: result = 3, change = -1, so round becomes 3 + -1 = 2
+     * start with 0
+     */
+    const round$ = this.roundClicks$.scan((result, change)=> result + change , 0);
 
-    //setup
+    /**
+     * The number of eliminated candidates should always be one less than the current round #. So, we map  to changes
+     * in the round number and
+     * number changes,
+     */
+    const eliminated$ = round$.map(round => {
+      return Array(round-1).fill(0).reduce((elims, i)=>{  // Array(round-1)...reduce() == "for i in range(0, round-1)...reduce()"
+        return elims.concat([this.findLoser(this.poll.candidates, this.poll.votes, elims).id]);
+      }, []);
+    });
 
-    // Holds all the candidates' ids, the positions actually matter
-    // because it holds a specific candidate's information, and
-    // their positions must not be changed. However, we can
-    // modify the value at any positions.
-    this.candIds = cands.map(cand => cand.id);
-    // Holds all the candidates' ids, but won't be modified at all.
-    this.originalCandIds = cands.map(cand => cand.id);
+    /**
+     * TODO - stream of "manual-removals" of candidates by the user
+     */
+    const removed$: Observable<string[]> = Observable.of([]);
 
-    // Again, candIds and originalCandIds have the same position throughout
-    // the entire program, and their positions must not be changed.
+    /**
+     * The "vote distribution stream" - who has which votes at any given point - is purely a function of which candidates have
+     * been eliminated and removed. So, we watch for changes in either of those (combineLatest...), and execute a pure
+     * function that distributes the votes
+     */
+    const votes$: Observable<{[id: string]:Vote[]}> = Observable.combineLatest(
+        eliminated$, removed$,
+        (elims, removeds) => {
+          let inactives = _.union(elims, removeds),
+              isActive = (id: string) => !_.includes(inactives, id),
+              init =  this.poll.candidates.reduce((dict, cand)=> { dict[cand.id]=[]; return dict;}, {});
 
-    //All the vote objects from the current poll
-    this.votes = this.poll.votes.toJS();
+          return <{[id: string]:Vote[]}>this.poll.votes.reduce((dict, vote) => {
+            for (let i = 0; i < vote.choices.length; i++){
+              if (isActive(vote.choices[i])){
+                dict[vote.choices[i]].push(vote);
+                break;
+              }
+            }
+            return dict;
+          }, init);
+        }
+    );
 
-    // An Array of Arrays; the outer array's positions correspond to the candidates in
-    // originalCand, the inner array positions correspond to the candidate's
-    // ally votes and those positions correspond to the votes from the candidates
-    // in originalCand.
-    this.candOtherVotes = cands.map(cand=>cand.otherVotes);
+    /**
+     * Purely a convenience stream, calculates the total number of votes contained in each vote distribution
+     * (note that this is necessary because the total number of votes will decrease as votes are exhausted)
+     */
+    const totalVotes$: Observable<number> =
+              votes$.map(dict => <number>_.values(dict).reduce((sum: number, arr: Array<any>) => sum + arr.length, 0));
 
-    //All the candidates' names
-    this.candNames = cands.map(cand=>cand.name);
+    /**
+     * This is essentially a convenience stream too, coalescing values obtained from the other streams into a single  
+     * "state" construct that can be passed around / referenced in templates more easily. 
+     */
+    const cands$: Observable<Candidate[]> = Observable.combineLatest(
+        eliminated$,
+        removed$,
+        votes$,
+        (elims, removeds, votes) => {
+          let isRemoved = (id: string) => _.includes(removeds, id),
+              isEliminated = (id: string) => _.includes(elims, id),
+              toReturn = mutable(this.poll).candidates.map(cand => {
+                            return {
+                              score: votes[cand.id].length,
+                              eliminated: isEliminated(cand.id),
+                              removed: isRemoved(cand.id),
+                              name: cand.name,
+                              id: cand.id,
+                              photo: cand.photo
+                            };
+                          });
+          return <Candidate[]> immutable(toReturn);
+        }
+    );
 
-    //An array of votes that corresponds to the candidates in originalCand
-    this.candVotes = this.getVotes(this.candIds);
+    this.round$ = round$;
+    this.totalVotes$ = totalVotes$;
+    this.cands$ = cands$;
 
-    //A log to keep track of different progresses
-    this.progressHistory = [];
-
+/*  Use these for testing
+    votes$.subscribe(x => {console.info('votes'); console.info(x);});
+    eliminated$.subscribe(x => {console.info('elim'); console.info(x);});
+    round$.subscribe(x => console.info(`ROUND ${x}`));
+    cands$.subscribe(x => {console.info('CANDS'); console.info(x);}); */
   }
 
-  /* @Param Takes in Candidate Id's
-   * @Return An array of number of votes corresponding to the array of Candidate Ids
-   */
-  getVotes(candIds: string[]): number[] {
+  ngAfterViewInit(){
+    /**
+     * this call sets everything in motion
+     */
+    this.roundClicks$.next(1);
+  }
 
-    //Reset ally votes to remove interconnectedness between rounds
-    //Each round should be unique and isolated from other rounds
-    this.candOtherVotes = this.candOtherVotes.map(x=> new Array(this.originalCandIds.length).fill(0));
 
-    var candVoteResult = new Array(candIds.length).fill(0);
+  private findLoser(cands: Candidate[], votes: Vote[], elims: string[]){
+    let isEliminated = (id: string) => _.includes((elims || []), id),
+        scores = this.calcScores(cands, votes, elims),
+        score = (id: string) => scores[id] || 0,
+        loScore = Math.min(...cands.filter(cand => ! isEliminated(cand.id))
+                                   .map(cand => score(cand.id)));
+    return cands.filter(cand => !isEliminated(cand.id))
+                .filter(cand => score(cand.id) == loScore)[0]; //TODO randomize
+  }
 
-    for ( let userVote of this.votes ) {
-      var userVoteChoices: OrderedSet<String> = userVote.choices;
-      //Counter to keep track of the rank of choice
-      var i = 0;
-      for ( let choice of userVoteChoices ) {
-        let cand = candIds.indexOf(choice);
-        //Check if its the first choice, if so, save this candidate position.
-        if ( i== 0 ) {
-          var firstChoiceCand = this.originalCandIds.indexOf(choice);
-        }
-        //Check if the candidate is still in the race
-        if ( cand != -1 ) {
-          //Check if the candidate is not their first choice
-          if ( i > 0 ) {
-            this.candOtherVotes[cand][firstChoiceCand] += 1 ;
-          }
-          //The candidate's total votes
-          candVoteResult[cand] += 1;
+  private calcScores(cands: Candidate[], votes: Vote[], eliminated: string[]): {[candId:string]: number}{
+    let ret: {[candId:string]: number} = {},
+        isEliminated = (id:string) => _.includes((eliminated || []), id);
+
+    votes.forEach(vote => {
+      for (let i = 0; i < vote.choices.length; i++){
+        if (!isEliminated(vote.choices[i])) {
+          if (ret[vote.choices[i]] == undefined) ret[vote.choices[i]] = 0;
+          ret[vote.choices[i]] += 1;
           break;
         }
-        i++;
       }
-    }
-    return candVoteResult;
+    });
+    return ret;
   }
-
-  //Print the candidate's ally votes, iff they have them.
-  printOtherVotes(candidate: Candidate): string {
-    var result = "";
-
-    //Selects the candidate from the position in originalCandIds
-    var cand = this.originalCandIds.indexOf(candidate.id);
-
-    //Counter to check if there's more than one candidate printed, this is just a style of printing.
-    var k = 0;
-    for ( let j = 0 ; j < this.candOtherVotes[cand].length ; j++ ) {
-      //If there's ally votes from this candidate
-      if ( this.candOtherVotes[cand][j] != 0 ) {
-        if ( k== 0) {
-          result = " has " + this.candOtherVotes[cand][j] + " vote(s) ";
-          result += "from " + this.candNames[j];
-          k++;
-        } else {
-          result += " , " + this.candOtherVotes[cand][j] + " vote(s) ";
-          result += "from " + this.candNames[j];
-        }
-      }
-    }
-
-    return result;
-
-  }
-
-  /*
-   * eliminates candidate(s) according to the votes
-   * from this.candVotes,and updates the votes at the end
-   */
-  progressToNextRound() {
-    var highestVoteValue = Math.max(...this.candVotes);
-
-    //Checks if we have found a winner
-    if ( this.getTotalVotes()*0.5 > highestVoteValue ) {
-
-      //Clone-ing the object here, otherwise it would just modify the object.
-      this.progressHistory.push(JSON.parse(JSON.stringify({
-        candIdsArray: this.candIds,
-        candVotesArray: this.candVotes
-      })));
-
-      var lowestVoteValue = Math.min(...this.candVotes.filter(x => {return x !== 0;}));
-
-      for (let i = 0; i < this.candVotes.length; i++) {
-        //Checks if there are repeating lowest vote value
-        if (this.candVotes[i] == lowestVoteValue || this.candVotes[i] == 0) {
-          this.candIds[i] = null;
-        }
-      }
-
-      //Recount the votes for all the candidates
-      this.candVotes = this.getVotes(this.candIds);
-
-    }
-
-  }
-
-  /* Using progressHistory to load the previous
-   * this.candIds and this.candVotes
-   */
-  progressToPrevRound() {
-    if (this.progressHistory.length != 0) {
-      var prevRound = this.progressHistory.pop();
-      this.candIds = prevRound.candIdsArray;
-      this.candVotes = this.getVotes(this.candIds);
-    }
-  }
-
-  //Call progressToNextRound until it finds a winner
-  progressToWinner() {
-    var highestVoteValue = Math.max(...this.candVotes);
-    while ( this.getTotalVotes()*0.5 > highestVoteValue ) {
-      this.progressToNextRound();
-      highestVoteValue = Math.max(...this.candVotes);
-    }
-  }
-
-  //Restarts the simulation
-  progressToStart() {
-    //reset everything
-    this.candIds = _.clone(this.originalCandIds);
-    this.candVotes = this.getVotes(this.candIds);
-    this.progressHistory = [];
-  }
-
-  //Returns the total number of votes
-  getTotalVotes(): number {
-    return this.votes.length;
-  }
-  
 }
