@@ -7,35 +7,38 @@ import * as _ from 'lodash';
 import { Subject } from 'rxjs/Subject';
 import { BehaviorSubject } from 'rxjs/Rx';
 import { Observable } from 'rxjs/Observable';
-import { mutate } from '../common/mutability';
-import { CandidateBarComponent } from './candidate.bar.ts';
+import { mutate, mutateAll } from '../common/mutability';
+import { CandidateBarComponent } from './candidate.bar';
+import { PieBarComponent } from './pie.bar';
 
 
 /**
- * This component is "dumb" because it knows nothing about the rest of the application around it, just that it's going  
- * to be handed a Poll as an input. What it DOES know (but the "smart" components do not) is how to render a poll to the 
- * screen. 
+ * This component is "dumb" because it knows nothing about the rest of the application around it, just that it's going
+ * to be handed a Poll as an input. What it DOES know (but the "smart" components do not) is how to render a poll to the
+ * screen.
  */
 
 @Component({
   selector: 'results-inner',
-  directives: [CandidateBarComponent],
+  directives: [CandidateBarComponent, PieBarComponent],
   template: `
-     <div>
-        <span>
-            <button (click)="progressToStart();">From Start</button>
-            <button (click)="roundClicks$.next(-1);">Previous Round</button>
-            <strong>{{round$ | async}}</strong>
-            <button (click)="roundClicks$.next(1);" >Next Round</button>
-            <button (click)="progressToWinner();">End Result</button>
-        </span>
-     </div>
-     
-      <div>The total number of votes: {{totalVotes$ | async}}</div>
-      <div *ngFor="#cand of cands$ | async">
-        <candidate-bar [candidate]="cand"></candidate-bar>
+     <div layout="column" layout-align="start stretch" layout-fill>
+        <pie-bar [cands$]="cands$"></pie-bar> 
+         <div>
+            <span>
+                <button (click)="progressToStart();">From Start</button>
+                <button (click)="roundClicks$.next(-1);">Previous Round</button>
+                <strong>{{round$ | async}}</strong>
+                <button (click)="roundClicks$.next(1);" >Next Round</button>
+                <button (click)="progressToWinner();">End Result</button>
+            </span>
+         </div>
+         
+          <div>The total number of votes: {{totalVotes$ | async}}</div>
+          <div *ngFor="let cand of cands$ | async">
+            <candidate-bar [candidate]="cand"></candidate-bar>
+        </div>
     </div>
-
   `
 })
 export class ResultsDumbComponent implements OnInit, AfterViewInit {
@@ -78,12 +81,12 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      * *which* n candidates have been eliminated in the n'th round must be a pure function of n and the choices in the votes.
      *
      * So, we map each round to the result of a function that calls that pure function recursively n times and returns
-     * the result. 
+     * the result.
      *
      */
-    const eliminated$ = round$.map( round =>
-            Array( round - 1 ).fill( "Horse's ass" ).reduce( ( elims, i ) => // "for i in range(0, round-1), given an array of eliminated cands,"
-               elims.concat( [ this.findLoser( elims ).id ] ) // find next cand to eliminate and add them to the array
+    const eliminated$ = round$.map( roundNum => // given a round number
+            Array( roundNum - 1 ).fill( "Horse's ass" ).reduce( ( elims, i ) => // "for i in range(0, round-1), pass an array of eliminated cands,"
+               elims.concat( [ this.findLoser( elims ).id ] ) // find the next cand to eliminate and add them to the array
                 , [] ) // starting with an empty array  
                 // return the array, i.e. emit the array as the set of currently eliminated candidates.
     );
@@ -112,7 +115,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
     const totalVotes$: Observable<number> =
               votes$.map(dict => _.reduce(dict, (sum = 0, votes, candId)=>  sum + votes.length, 0) );
 
-        
+
     /**
      * This is essentially a convenience stream too, coalescing values obtained from the other streams into a single
      * "state" construct that can be passed around / referenced in templates more easily.
@@ -122,17 +125,17 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
         removed$,
         votes$,
         ( elims, removeds, votes ) =>
-            <Candidate[]> mutate( this.poll.candidates, ( cands )=>
-                cands.map( cand => ( <Candidate> {
-                  score     : votes[ cand.id ].length,
-                  eliminated: _.includes( elims, cand.id ),
-                  removed   : _.includes( removeds, cand.id ),
-                  name      : cand.name,
-                  id        : cand.id,
-                  photo     : cand.photo
-                }) )
-            )
+            <Array<Candidate>> mutateAll( this.poll.candidates, ( cand )=>(<Candidate> {
+                votes: votes[cand.id],
+                score     : votes[ cand.id ].length,
+                eliminated: _.includes( elims, cand.id ),
+                removed   : _.includes( removeds, cand.id ),
+                name      : cand.name,
+                id        : cand.id,
+                photo     : cand.photo
+            }), Candidate)
     );
+
 
     this.round$ = round$;
     this.totalVotes$ = totalVotes$;
@@ -165,8 +168,8 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
                 .filter(cand => score(cand.id) == loScore)[0]; //TODO randomize
   }
 
-  
-  
+
+
   private distributeVotes(eliminated: string[]): {[candId:string]: Vote[]} {
     let isEliminated = (id: string) => _.includes(eliminated, id),
         initial =  <{[id: string]: Vote[]}> this.poll.candidates
@@ -185,7 +188,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
     }, initial);
 
   }
-  
+
   private calcScores(eliminated: string[]): {[candId:string]: number}{
     return <{[candId:string]: number}> _.transform(this.distributeVotes(eliminated), (result, votes, candId)=> {(
       result[candId] = votes.length

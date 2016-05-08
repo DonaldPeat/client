@@ -16,6 +16,9 @@ import { ResultsDumbComponent } from './results.component';
 @Component({
   selector: 'results',
   directives: [ ResultsDumbComponent],
+  host: {
+    'layout-fill': ''
+  },
   template: `
     
     <results-inner [poll]="poll$ | async">
