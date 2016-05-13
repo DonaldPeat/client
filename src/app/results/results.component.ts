@@ -9,7 +9,7 @@ import { BehaviorSubject } from 'rxjs/Rx';
 import { Observable } from 'rxjs/Observable';
 import { mutate, mutateAll } from '../common/mutability';
 import { CandidateBarComponent } from './candidate.bar';
-import { PieBarComponent } from './pie.bar';
+import { PieBarComponent } from './pie.bar.alt';
 
 
 /**
@@ -22,14 +22,14 @@ import { PieBarComponent } from './pie.bar';
   selector: 'results-inner',
   directives: [CandidateBarComponent, PieBarComponent],
   template: `
-     <div layout="column" layout-align="start stretch" layout-fill>
+     <div layout="column" layout-align="start stretch" class="results-wrapper" layout-fill>
         <pie-bar [cands$]="cands$"></pie-bar> 
          <div>
             <span>
                 <button (click)="progressToStart();">From Start</button>
-                <button (click)="roundClicks$.next(-1);">Previous Round</button>
+                <button (click)="roundClicks$.next(-1);" id="next" #prev>Previous Round</button>
                 <strong>{{round$ | async}}</strong>
-                <button (click)="roundClicks$.next(1);" >Next Round</button>
+                <button (click)="roundClicks$.next(1);" id="prev" #next>Next Round</button>
                 <button (click)="progressToWinner();">End Result</button>
             </span>
          </div>
@@ -48,7 +48,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
   private round$: Observable<number>;
   private totalVotes$: Observable<number>;
 
-  private roundClicks$: Subject<number> = BehaviorSubject.create();
+  roundClicks$: Subject<number> = BehaviorSubject.create();
 
   /**
    * The goal here is to specify the entire execution of the application declaratively, vis a vis our definitions of
