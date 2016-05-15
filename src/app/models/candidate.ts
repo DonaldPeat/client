@@ -55,12 +55,34 @@ export class Candidate implements ICandidate {
     return ! ( this.eliminated || this.removed);
   }
 
- /* public getVotesTo(){
-    return this.votes.reduce((returnVal, vote) => {
-      
-    }, {});
-  }*/
-  
+  /**
+   * todo rename up
+   * @param toId
+   * @returns {{}}
+   */
+  public getInboundAllyVotes(toId?: string):{[id:string]:number}  {
+    let init: {[id:string]:number} = {};
+    return this.votes.reduce((dict, vote)=>{
+      let myChoice = vote.choices.indexOf(this.id);
+      for (let i = 0; i < myChoice; i++){
+        if (!dict[vote.choices[i]]) dict[vote.choices[i]] = 0;
+        dict[vote.choices[i]] += 1; //= dict[vote.choices[i]] + 1;
+      }
+      return dict;
+    }, init);
+  }
+
+  public getOutboundAllyVotes(toId?: string):{[id:string]:number}  {
+    let init: {[id:string]:number} = {};
+    return this.votes.reduce((dict, vote)=>{
+      let myChoice = vote.choices.indexOf(this.id);
+      for (let i = 0; i > myChoice; i++){ // note > rather than <
+        if (!dict[vote.choices[i]]) dict[vote.choices[i]] = 0;
+        dict[vote.choices[i]] += 1; //= dict[vote.choices[i]] + 1;
+      }
+      return dict;
+    }, init);
+  }
 
 }
 

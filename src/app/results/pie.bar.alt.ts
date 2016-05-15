@@ -41,7 +41,7 @@ export class PieBarComponent implements OnInit, AfterViewInit {
      */
     Observable.combineLatest( this.cands$, this.screenWidth$ ).subscribe(
         ( [cands, width] ) => {
-
+          debugger;
           this.svg.attr( 'width', width ); // update the screen width - if it hasn't changed, this has no effect
 
           let actives = mutable( cands ).filter( cand => cand.isActive ), // don't include eliminated candidates

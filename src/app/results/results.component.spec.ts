@@ -1,9 +1,9 @@
 declare var hot, cold, expectObservable, expectSubscriptions;
 
-import {it, describe, expect, beforeEachProviders, async, inject} from "@angular/core/testing";
+import {beforeEachProviders, async, inject} from "@angular/core/testing";
 import {TestComponentBuilder} from "@angular/compiler/testing"
 import {Component} from "@angular/core";
-import {getDOM} from "@angular//platform-browser/src/dom/dom_adapter";
+import {getDOM} from "@angular/platform-browser/src/dom/dom_adapter";
 import {provideStore} from "@ngrx/store";
 import { ResultsDumbComponent } from './results.component';
 import { Observable } from 'rxjs/Observable';
@@ -28,11 +28,43 @@ describe( 'ResultsComponent', ()=> {
            * is what we expect it to be after different things happen */
           resultsCmp: ResultsDumbComponent = <ResultsDumbComponent>root.debugElement.children[ 0 ].componentInstance;
 
+      let DOM = getDOM(),
+          prev = DOM.querySelectorAll(element, '#prev')[0],
+          next = DOM.querySelectorAll(element, '#next')[0];
+
+      expect(prev).toBeDefined();
+      expect(next).toBeDefined();
+
+
+      let events = {
+            n: -1,
+            p: 1
+          }, states = {
+
+          },
+          eventSeq = '--n--n--n---n-----n--n-p---n-n--n',
+          stateSeq = '--1--2--3---4-----5--6-5---6-7--8',
+          clickEvents = hot(eventSeq, events);
+
+      clickEvents.subscribe(val => {
+        console.log(JSON.stringify(val));
+        resultsCmp.roundClicks$.next(val);
+        
+      });
+
+      expectObservable(resultsCmp.round$).toBe(stateSeq, {a: true, b: false});
+
+      expect(true).toBe(true);
+
+
       //expect that the number of elements with class .cand-name matches the number of candidates in the poll
       expect( getDOM().querySelectorAll( element, '.results-wrapper' ).length ).toEqual( 1 );
 
-      expect(resultsCmp.poll.title).toEqual(mockPoll.title);
-      
+
+
+
+
+
       //TODO more tests here
 
       /* generally, you'd want to split these into multiple it(...) with specific descriptions, When we're testing 
