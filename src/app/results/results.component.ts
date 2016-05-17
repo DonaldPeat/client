@@ -10,6 +10,7 @@ import { Observable } from 'rxjs/Observable';
 import { mutate, mutateAll } from '../common/mutability';
 import { CandidateBarComponent } from './candidate.bar';
 import { PieBarComponent } from './pie.bar.alt';
+import {PieSunBurstComponent} from "./pie.sunburst";
 
 
 /**
@@ -20,10 +21,10 @@ import { PieBarComponent } from './pie.bar.alt';
 
 @Component({
   selector: 'results-inner',
-  directives: [CandidateBarComponent, PieBarComponent],
+  directives: [CandidateBarComponent, PieSunBurstComponent],
   template: `
      <div layout="column" layout-align="start stretch" class="results-wrapper" layout-fill>
-        <pie-bar [cands$]="cands$"></pie-bar> 
+        <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$ | async"></pie-sunburst> 
          <div>
             <span>
                 <button (click)="progressToStart();">From Start</button>
