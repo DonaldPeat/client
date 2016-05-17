@@ -11,7 +11,6 @@ import {Subject} from 'rxjs/Subject';
 import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 import {mutable} from '../common/mutability';
 
-
 @Directive({
     selector: 'pie-sunburst'
 })
@@ -43,8 +42,8 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
          * Observable.combineLatest says: "Anytime either of these changes, fire a new event with the latest value of each"
          * So, we subscribe to that and run our viz update logic each time it fires.
          */
-        Observable.combineLatest(this.cands$, this.screenWidth$).subscribe(
-            ([cands, width]) => {
+        Observable.combineLatest(this.cands$, this.screenWidth$, this.totalVotes$).subscribe(
+            ([cands, width, totalVotes]) => {
 
                 //this.svg.attr( 'width', width ); // update the screen width - if it hasn't changed, this has no effect
 
@@ -55,15 +54,16 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                         .range([0, width || 0]), //mapped to 0 to full width of screen
                     scores = actives.map(cand => +cand.score).sort((x, y)=> y - x),
                     ids = mutable(cands).map(cand => cand.id).sort(), // sort alphabetically so each cand's color stays the same
-                    color = d3.scale.category20b().domain(ids);
+                    color = d3.scale.category20b().domain(ids),
+                    colorInner = d3.scale.category10();
 
-                var pie = d3.layout.pie()
+                let pie = d3.layout.pie()
                     .value(d => d);
 
-                console.log(this.totalVotes$);
-
-                var centerCircle = d3.svg.arc()
+                let centerCircle = d3.svg.arc()
                     .outerRadius(this.radius*0.9);
+
+                let numVotes = [tot,totalVotes-tot];
 
                 let updates = this.g.selectAll('.arc').data(pie(scores)),
                     enters = updates.enter(), // elements we're drawing for the first time
@@ -74,10 +74,13 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                     .attr("fill", d => color(d.data))
                     .style('stroke', '#fff');
 
-                enters.append("circle")
-                    .attr("transform", function(d) { return "translate(" + centerCircle.centroid(d) + ")"; })
-                    .attr("fill", "purple")
-                    .attr("r","46");
+                this.g.append("g")
+                    .selectAll('.innerCircle').data(pie(numVotes))
+                    .enter()
+                    .append("path")
+                    .attr("d", centerCircle )
+                    .attr("fill", d => colorInner(d.data))
+                    .attr("class","innerCircle");
 
                 // updates.attr( 'width', d => wid( d.score ) )
                 //     .attr( 'x', d => {

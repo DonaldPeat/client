@@ -24,7 +24,7 @@ import {PieSunBurstComponent} from "./pie.sunburst";
   directives: [CandidateBarComponent, PieSunBurstComponent],
   template: `
      <div layout="column" layout-align="start stretch" class="results-wrapper" layout-fill>
-        <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$ | async"></pie-sunburst> 
+        <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$"></pie-sunburst> 
          <div>
             <span>
                 <button (click)="progressToStart();">From Start</button>
