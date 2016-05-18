@@ -1,10 +1,10 @@
 
 
-import { Candidate, candidate } from './candidate';
-import { Vote, vote } from './vote';
+import { Candidate  } from './candidate';
+import { Vote } from './vote';
 import * as moment from 'moment';
 import { Moment } from 'moment';
-import { Poll, poll } from './poll';
+import { Poll } from './poll';
 
 
 /**
@@ -15,48 +15,22 @@ import { Poll, poll } from './poll';
 const now: Moment = moment();
 
 const candidates: Candidate[] = [
-  candidate({
-    name: "Joe Fooey",
-    id: "0",
-    photo: ""
-            }),
-  candidate({
-              name: "Ima Huzenhousen",
-              id: "1",
-              photo: ""
-            }),
-  candidate({
-              name: "Nigel Ett",
-              id: "2",
-              photo: ""
-            }),
+    new Candidate("id-0", "Joe Fooey", "TODO"),
+    new Candidate("id-1", "Ima Huzenhousen", "TODO"),
+    new Candidate("id-2", "Nigel Ettelsworth", "TODO"),
 ];
 
 const votes: Vote[] = [
-    vote({
-      timestamp: now,
-      choices: ["0", "1", "2"] 
-    }),
-    vote({
-           timestamp: now,
-           choices: ["0", "1", "2"]
-         }),
-    vote({
-           timestamp: now,
-           choices: ["1", "0", "2"]
-         }),
-    vote({
-           timestamp: now,
-           choices: ["2", "1", "0"]
-         }),
-    vote({
-           timestamp: now,
-           choices: ["2", "1", "0"]
-         })
+    new Vote(["0", "1", "2"]),
+    new Vote(["1", "0", "2"]),
+    new Vote(["2", "1", "0"]),
+    new Vote(["2", "0", "1"])
 ];
 
-export const mockPoll: Poll = poll({
+export const mockPoll: Poll =
+
+                 Poll.mutable({
   title: "Dummy Poll",
   candidates: candidates,
   votes: votes 
-                                   })
+                                   });

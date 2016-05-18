@@ -9,9 +9,7 @@ export class Polls {
 
 
   private BACKEND_BASE_URI = "http://localhost:3000";
-  constructor(private http: Http){
-    console.log("POLLS INIT!!");
-  }
+  constructor(private http: Http){ }
 
 
 
