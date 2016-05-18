@@ -47,15 +47,25 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
 
                 //this.svg.attr( 'width', width ); // update the screen width - if it hasn't changed, this has no effect
 
-                let actives = mutable(cands).filter(cand => cand.isActive), // don't include eliminated candidates
+                let actives = cands.filter(cand => cand.isActive), // don't include eliminated candidates
                     tot = actives.reduce((sum, cand) => sum + cand.score, 0), //the total # of active votes
                     wid = d3.scale.linear()
                         .domain([0, tot]) // scale from 0 to 100% of the votes
                         .range([0, width || 0]), //mapped to 0 to full width of screen
                     scores = actives.map(cand => +cand.score).sort((x, y)=> y - x),
+                    
+                    //JEFF LOOK HERE
+                    
+                    allyVotes = cands.reduce((result, cand) => { // returns the result of running a function for each element in the array
+                      result[cand.id] = cand.getInboundAllyVotes();
+                      return result   
+                    }, {}),//starting with an empty array
+                    
+                    
                     ids = mutable(cands).map(cand => cand.id).sort(), // sort alphabetically so each cand's color stays the same
                     color = d3.scale.category20b().domain(ids),
                     colorInner = d3.scale.category10();
+              
 
                 let pie = d3.layout.pie()
                     .value(d => d);
