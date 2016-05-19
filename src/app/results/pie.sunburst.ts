@@ -53,6 +53,13 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                         .domain([0, tot]) // scale from 0 to 100% of the votes
                         .range([0, width || 0]), //mapped to 0 to full width of screen
                     scores = actives.map(cand => +cand.score).sort((x, y)=> y - x),
+                    sortedActives = actives.sort((x, y) => y.score - x.score),
+                    allyVotes = sortedActives.reduce((result, cand) => {
+                        let arrayId = Object.keys(cand.getInboundAllyVotes());
+                        let arrayVote = cand.getInboundAllyVotes()[""+arrayId];
+                        result[cand.id] = arrayId.reduce((prev, val) => {prev[val] = arrayVote; return prev;},{});
+                        return result
+                    },{}),
                     ids = mutable(cands).map(cand => cand.id).sort(), // sort alphabetically so each cand's color stays the same
                     color = d3.scale.category20b().domain(ids),
                     colorInner = d3.scale.category10();
