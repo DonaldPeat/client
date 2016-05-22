@@ -68,7 +68,7 @@
     "ts-helpers": "^1.1.1",
     "tsimmutable": "^0.4.1",
     "typescript": "1.8.9",
-    "typings": "^0.8.1",
+    "typings": "^1.0.4",
     "uglify-js": "^2.6.2",
     "webpack": "^1.12.14",
     "webpack-dev-server": "^1.14.1",
