@@ -13,6 +13,13 @@ import {provideStore, usePostMiddleware, usePreMiddleware} from '@ngrx/store';
 import {provideRouter} from '@ngrx/router';
 import {instrumentStore} from '@ngrx/devtools';
 
+import { MATERIAL_DIRECTIVES } from "./vendor";
+
+import { MdIconRegistry } from '@angular2-material/icon';
+
+const PlatformDirectives = [
+  ...MATERIAL_DIRECTIVES
+];
 
 //app
 import {AppContainer} from "./app/components/app.container";
@@ -26,6 +33,8 @@ bootstrap(AppContainer, [
   Polls,
   provide(APP_BASE_HREF, { useValue: '/' }),
   provide(LocationStrategy, { useClass: PathLocationStrategy }),
+  MdIconRegistry,
+  { provide: PLATFORM_DIRECTIVES, multi: true, useValue: PlatformDirectives },
   provideStore({ app }),
   provideRouter(ROUTES),
   usePreMiddleware(actionLog),

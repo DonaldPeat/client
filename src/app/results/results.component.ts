@@ -22,23 +22,34 @@ import {PieSunBurstComponent} from "./pie.sunburst";
 @Component({
   selector: 'results-inner',
   directives: [CandidateBarComponent, PieSunBurstComponent],
+  styles: [
+      `.control-bar{
+            align-self: center;
+            margin: 5px 0;
+       }`
+  ],
   template: `
      <div layout="column" layout-align="start stretch" class="results-wrapper" layout-fill>
-        <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$"></pie-sunburst> 
-         <div>
-            <span>
-                <button (click)="progressToStart();">From Start</button>
-                <button (click)="roundClicks$.next(-1);" [disabled]="!(isStart$ | async)" id="next" #prev>Previous Round</button>
-                <strong>{{round$ | async}}</strong>
-                <button (click)="roundClicks$.next(1);" [disabled]="(isGameOver$ | async)" id="prev" #next>Next Round</button>
-                <button (click)="skipToEnds$.next();">End Result</button>
-            </span>
-         </div>
+        <div layout="row" class="control-bar">
+       
+          <button md-button (click)="progressToStart();">From Start</button>
+          <button md-button  (click)="roundClicks$.next(-1);" [disabled]="!(isStart$ | async)" id="next" #prev>Previous Round</button>
+          <div><strong>{{round$ | async}}</strong></div>
+          <button md-button (click)="roundClicks$.next(1);" [disabled]="(isGameOver$ | async)" id="prev" #next>Next Round</button>
+          <button md-button (click)="skipToEnds$.next();">End Result</button>
+        </div>
          
-          <div>The total number of votes: {{totalVotes$ | async}}</div>
+         <div layout="row" layout-align="space-around stretch">
+         <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$" flex></pie-sunburst> 
+         <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$" flex></pie-sunburst> 
+
+         </div>
+
+
+          <!--div>The total number of votes: {{totalVotes$ | async}}</div>
           <div *ngFor="let cand of cands$ | async">
             <candidate-bar [candidate]="cand"></candidate-bar>
-        </div>
+        </div-->
     </div>
   `
 })
@@ -157,8 +168,11 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
     /**
      *  
      */
-    this.skipToEnds$.withLatestFrom( this.cands$, this.round$ ).subscribe( ([click, cands, round]) => {
-      if (! this.isGameOver( cands )) this.roundClicks$.next(1);
+
+
+
+    this.skipToEnds$.withLatestFrom( this.isGameOver$ , this.round$).subscribe( ([click, gameOver, rd]) => {
+      if (rd < 12) this.roundClicks$.next(1);
     } );
 
 
