@@ -45,8 +45,8 @@ import {PieSunBurstComponent} from "./pie.sunburst";
 export class ResultsDumbComponent implements OnInit, AfterViewInit {
   @Input() poll: Poll;
 
-  private cands$: Observable<Candidate[]>;
   private round$: Observable<number>;
+  private cands$: Observable<Candidate[]>;
   private totalVotes$: Observable<number>;
   private isGameOver$: Observable<boolean>;
   private isStart$: Observable<boolean>;
@@ -142,6 +142,8 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
     );
 
     /*
+     * Jeff: This is perfectly
+     *
      * Return true if any candidates have more than 50% of the active votes
      */
     this.isGameOver$ = Observable.combineLatest(this.cands$,this.totalVotes$,
@@ -149,17 +151,22 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
             cands.some(cand => cand.score >= numVotes * 0.5)
     );
 
-    this.isStart$ = this.round$.map(roundNum =>
-    roundNum > 1);
+    this.isStart$ = this.round$.map(roundNum => roundNum > 1);
 
 
+    /**
+     *  
+     */
+    this.skipToEnds$.withLatestFrom( this.cands$, this.round$ ).subscribe( ([click, cands, round]) => {
+      if (! this.isGameOver( cands )) this.roundClicks$.next(1);
+    } );
 
 
-/* Use these for testing
-    votes$.subscribe(x => {console.info('votes'); console.info(x);});
-    eliminated$.subscribe(x => {console.info('elim'); console.info(x);});
-    round$.subscribe(x => console.info(`ROUND ${x}`));
-    cands$.subscribe(x => {console.info('CANDS'); console.info(x);}); */
+    /* Use these for testing
+        votes$.subscribe(x => {console.info('votes'); console.info(x);});
+        eliminated$.subscribe(x => {console.info('elim'); console.info(x);});
+        round$.subscribe(x => console.info(`ROUND ${x}`));
+        cands$.subscribe(x => {console.info('CANDS'); console.info(x);}); */
   }
 
   ngAfterViewInit(){
@@ -209,4 +216,11 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
     )}
     );
   }
+
+  private isGameOver(cands: Candidate[]): boolean {
+    //TODO based on the vote distribution, do we have a winner? i.e. does one candidate have > 50% of the votes
+
+    return false;
+  }
+
 }
