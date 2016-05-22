@@ -21,9 +21,6 @@ import { ROUTES } from './app/routes';
 import { app } from './app/state/app.reducer';
 import { Polls } from './app/models/polls';
 
-
-
-
 bootstrap(AppContainer, [
   HTTP_PROVIDERS,
   Polls,
