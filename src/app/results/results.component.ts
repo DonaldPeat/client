@@ -28,9 +28,9 @@ import {PieSunBurstComponent} from "./pie.sunburst";
          <div>
             <span>
                 <button (click)="progressToStart();">From Start</button>
-                <button (click)="roundClicks$.next(-1);" id="next" #prev>Previous Round</button>
+                <button (click)="roundClicks$.next(-1);" [disabled]="!(isStart$ | async)" id="next" #prev>Previous Round</button>
                 <strong>{{round$ | async}}</strong>
-                <button (click)="roundClicks$.next(1);" id="prev" #next>Next Round</button>
+                <button (click)="roundClicks$.next(1);" [disabled]="(isGameOver$ | async)" id="prev" #next>Next Round</button>
                 <button (click)="skipToEnds$.next();">End Result</button>
             </span>
          </div>
@@ -48,7 +48,8 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
   private cands$: Observable<Candidate[]>;
   private round$: Observable<number>;
   private totalVotes$: Observable<number>;
-
+  private isGameOver$: Observable<boolean>;
+  private isStart$: Observable<boolean>;
 
   roundClicks$: Subject<number> = BehaviorSubject.create();
   skipToEnds$: Subject<any> = BehaviorSubject.create();
@@ -139,6 +140,17 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
                 photo     : cand.photo
             }), Candidate)
     );
+
+    /*
+     * Return true if any candidates have more than 50% of the active votes
+     */
+    this.isGameOver$ = Observable.combineLatest(this.cands$,this.totalVotes$,
+        (cands,numVotes) =>
+            cands.some(cand => cand.score >= numVotes * 0.5)
+    );
+
+    this.isStart$ = this.round$.map(roundNum =>
+    roundNum > 1);
 
 
 
