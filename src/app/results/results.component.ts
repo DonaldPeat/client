@@ -31,7 +31,7 @@ import {PieSunBurstComponent} from "./pie.sunburst";
                 <button (click)="roundClicks$.next(-1);" id="next" #prev>Previous Round</button>
                 <strong>{{round$ | async}}</strong>
                 <button (click)="roundClicks$.next(1);" id="prev" #next>Next Round</button>
-                <button (click)="progressToWinner();">End Result</button>
+                <button (click)="skipToEnds$.next();">End Result</button>
             </span>
          </div>
          
@@ -49,7 +49,9 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
   private round$: Observable<number>;
   private totalVotes$: Observable<number>;
 
+
   roundClicks$: Subject<number> = BehaviorSubject.create();
+  skipToEnds$: Subject<any> = BehaviorSubject.create();
 
   /**
    * The goal here is to specify the entire execution of the application declaratively, vis a vis our definitions of
@@ -75,7 +77,9 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      * https://github.com/Reactive-Extensions/RxJS/blob/master/doc/api/core/operators/scan.md
 
      */
-    const round$ = this.roundClicks$.scan((result, change)=> result + change , 0);
+
+
+    this.round$ = this.roundClicks$.scan((result, change)=> result + change , 0);
 
     /**
      * The number of eliminated candidates should always be one less than the current round. For obvious domain reasons,
@@ -85,7 +89,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      * the result.
      *
      */
-    const eliminated$ = round$.map( roundNum => // given a round number
+    const eliminated$ = this.round$.map( roundNum => // given a round number
             Array( roundNum - 1 ).fill( "Horse's ass" ).reduce( ( elims, i ) => // "for i in range(0, round-1), pass an array of eliminated cands,"
                elims.concat( [ this.findLoser( elims ).id ] ) // find the next cand to eliminate and add them to the array
                 , [] ) // starting with an empty array  
@@ -113,15 +117,14 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      * Purely a convenience stream, calculates the total number of votes contained in each vote distribution
      * (note that this is necessary because the total number of votes will decrease as votes are exhausted)
      */
-    const totalVotes$: Observable<number> =
-              votes$.map(dict => _.reduce(dict, (sum = 0, votes, candId)=>  sum + votes.length, 0) );
+    this.totalVotes$ = votes$.map(dict => _.reduce(dict, (sum = 0, votes, candId)=>  sum + votes.length, 0) );
 
 
     /**
      * This is essentially a convenience stream too, coalescing values obtained from the other streams into a single
      * "state" construct that can be passed around / referenced in templates more easily.
      */
-    const cands$: Observable<Candidate[]> = Observable.combineLatest(
+    this.cands$ = Observable.combineLatest(
         eliminated$,
         removed$,
         votes$,
@@ -138,9 +141,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
     );
 
 
-    this.round$ = round$;
-    this.totalVotes$ = totalVotes$;
-    this.cands$ = cands$;
+
 
 /* Use these for testing
     votes$.subscribe(x => {console.info('votes'); console.info(x);});
