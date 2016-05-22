@@ -22,6 +22,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
     private height = 100;
     private width = 350;
     private arc;
+    private centerArc;
     private radius = Math.min(this.width, this.height) / 2;
     private svg:Selection<any>;
     private g:any;
@@ -34,9 +35,12 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
 
 
     constructor(private element:ElementRef, private renderer:Renderer) {
-    }
+        
+    }        
+     
 
     ngOnInit() {
+     
         /**
          * We want to redraw/update the graphic every time the data changes, OR the size of the screen changes.
          * Observable.combineLatest says: "Anytime either of these changes, fire a new event with the latest value of each"
@@ -61,18 +65,8 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                     color = d3.scale.category20b().domain(ids),
                     colorInner = d3.scale.category10();
 
-                let allyVotesObjects = Object.keys(allyVotes).map(function(key){return allyVotes[key]});
-                let allyVotesKeys = allyVotesObjects.map( key => { return Object.keys(key).map( id => { return id }) } );
-                let allyVotesValues = allyVotesObjects.map( key => { return Object.keys(key).map( id => { return key[id] }) } );
-
                 let pie = d3.layout.pie()
                     .value(d => d);
-
-                let pie1 = d3.layout.pie()
-                    .value(d => d.data);
-
-                let centerCircle = d3.svg.arc()
-                    .outerRadius(this.radius*0.9);
 
                 let numVotes = [tot,totalVotes-tot];
 
@@ -81,26 +75,34 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                     exits = updates.exit(); // elements that are being removed
 
                 enters.append("path")
+                    .attr('class','arc')
                     .attr("d", this.arc)
                     .attr("fill", d => color(d.data))
-                    .style('stroke', '#fff');
+                    .each(d => this.element.nativeElement._current = d );
 
-                this.g.append("g")
-                    .selectAll('.innerCircle').data(pie(numVotes))
-                    .enter()
-                    .append("path")
-                    .attr("d", centerCircle )
-                    .attr("fill", d => colorInner(d.data))
-                    .attr("class","innerCircle");
+                let innerCircle = this.g.selectAll('.centerArc').data(pie(numVotes)),
+                    innerCirEnters = innerCircle.enter(),
+                    innerCirExits = innerCircle.exit();
 
-                // updates.attr( 'width', d => wid( d.score ) )
-                //     .attr( 'x', d => {
-                //         let sumOfHigherScores = scores.filter( score => score > d.score )
-                //             .reduce( ( sum, next )=> sum + next, 0 );
-                //         return wid( sumOfHigherScores );
-                //     } );
+                innerCirEnters.append("path")
+                    .attr("class", "centerArc")
+                    .attr("d", this.centerArc)
+                    .attr("fill", d => colorInner(d.data));
 
-                //exits.remove();
+                innerCirExits.remove();
+                exits.remove();
+
+                let updateVisual = updates
+                    .transition().duration(650)
+                    .attrTween("d", d => {
+                        let interpolate = d3.interpolate(this.element.nativeElement._current, d);
+                        this.element.nativeElement._current = interpolate(0);
+                        return t => this.arc(interpolate(t))
+                    } );
+
+                let innerCirUpdate = innerCircle
+                    .transition().duration(650)
+                    .attr("d",this.centerArc);
 
             });
 
@@ -123,6 +125,9 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
         this.arc = d3.svg.arc()
             .innerRadius(this.radius * 0.9)
             .outerRadius(this.radius * 1.8);
+
+        this.centerArc = d3.svg.arc()
+            .outerRadius(this.radius*0.9);
 
         this.screenWidth$.next(initWidth);
     }
