@@ -1,4 +1,4 @@
-import {Routes} from '@ngrx/router';
+import { Routes } from '@ngrx/router';
 import { VoteInputContainer } from './vote/vote.container';
 import { ResultsContainer } from './results/results.container';
 

@@ -1,4 +1,4 @@
-import {Reducer, Action} from '@ngrx/store';
+import { Reducer, Action } from '@ngrx/store';
 import { AppState, ImmutableAppState } from './app.state';
 
 export const AppActions = {

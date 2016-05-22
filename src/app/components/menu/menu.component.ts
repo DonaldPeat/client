@@ -1,6 +1,5 @@
-
-
 import {Component, HostBinding, Input, OnInit, ChangeDetectionStrategy} from "@angular/core";
+
 @Component({
   selector: 'rcv-menu',
   template: `
