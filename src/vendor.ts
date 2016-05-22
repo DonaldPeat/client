@@ -1,12 +1,5 @@
 // This file is to bundle all dependencies into a single file apart from the actual app, using webpack
 
-//polyfills
-import 'core-js/es6';
-import 'core-js/es7/reflect';
-require('zone.js/dist/zone');
-require('zone.js/dist/long-stack-trace-zone');
-
-import 'ts-helpers';
 
 
 //angular
