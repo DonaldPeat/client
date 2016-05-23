@@ -109,6 +109,29 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                     .filter(d => d.endAngle - d.startAngle < .2)
                     .remove();
 
+                //Draws Candidate's Name; labels for candidates' name
+                let candLabels = this.g.selectAll('.candLabel').data(pie(scores)),
+                    candLabelsEnter = candLabels.enter(),
+                    candLabelsExit = candLabels.exit();
+
+                //Draw candidates' name for the first time
+                candLabelsEnter
+                    .append("text")
+                    .attr("class","candLabel")
+                    .attr("dy",".25em")
+                    .attr("transform", d => {
+                        let c = this.arc.centroid(d);
+                        return `translate(${c[0]*1.65},${c[1]*1.65})`;
+                    })
+                    .attr("text-anchor","middle")
+                    .style("fill", "black")
+                    .text(d => percentFormat(d.value/tot));
+
+                //Remove candidates' name that have less than 2 degree of slice
+                this.g.selectAll('.candLabel')
+                    .filter(d => d.endAngle - d.startAngle < .2)
+                    .remove();
+
                 //Draws inner circle
                 let innerCircle = this.g.selectAll('.centerArc').data(pie(numVotes)),
                     innerCirEnters = innerCircle.enter(),
@@ -150,6 +173,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                 innerCirTextExits.remove();
                 outerCirExits.remove();
                 outerCirTextExits.remove();
+                candLabelsExit.remove();
 
                 //Updates the outerCircle with one less candidate
                 outerCircle
@@ -187,6 +211,15 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                         return `translate(${this.centerArc.centroid(d)}) rotate(${0})`;
                     })
                     .text(d => percentFormat(d.value / totalVotes));
+
+                //Updates the candidates' name with one less candidate
+                candLabels
+                    .transition().duration(650)
+                    .attr("transform", d => {
+                        let c = this.arc.centroid(d);
+                        return `translate(${c[0]*1.65},${c[1]*1.65})`;
+                    })
+                    .text(d => percentFormat(d.value / tot));
 
             });
 
