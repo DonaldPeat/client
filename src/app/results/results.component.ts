@@ -14,9 +14,7 @@ import {PieSunBurstComponent} from "./pie.sunburst";
 
 
 /**
- * This component is "dumb" because it knows nothing about the rest of the application around it, just that it's going
- * to be handed a Poll as an input. What it DOES know (but the "smart" components do not) is how to render a poll to the
- * screen.
+
  */
 
 @Component({
@@ -41,7 +39,7 @@ import {PieSunBurstComponent} from "./pie.sunburst";
          
          <div layout="row" layout-align="space-around stretch">
          <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$" flex></pie-sunburst> 
-         <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$" flex></pie-sunburst> 
+         <div flex style="align-self: center"> CHORD DIAGRAM</div>
 
          </div>
 
@@ -58,6 +56,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
 
   private round$: Observable<number>;
   private cands$: Observable<Candidate[]>;
+  private votes$: Observable<{[id: string]: Vote[]}>;
   private totalVotes$: Observable<number>;
   private isGameOver$: Observable<boolean>;
   private isStart$: Observable<boolean>;
@@ -66,6 +65,13 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
   skipToEnds$: Subject<any> = BehaviorSubject.create();
 
   /**
+   *
+   * The idea is to define the entire execution of the application up front, by identifying the
+   * vis a vis a set of pure functions
+   *
+   *
+   * as a set of pure functions
+   *
    * The goal here is to specify the entire execution of the application declaratively, vis a vis our definitions of
    * streams of user input and resultant streams of application state. The design challenge, then, is to identify these
    * streams and codify the causal relationships between them into our "reactive architecture".
@@ -104,7 +110,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
     const eliminated$ = this.round$.map( roundNum => // given a round number
             Array( roundNum - 1 ).fill( "Horse's ass" ).reduce( ( elims, i ) => // "for i in range(0, round-1), pass an array of eliminated cands,"
                elims.concat( [ this.findLoser( elims ).id ] ) // find the next cand to eliminate and add them to the array
-                , [] ) // starting with an empty array  
+                , [] ) // starting with an empty array
                 // return the array, i.e. emit the array as the set of currently eliminated candidates.
     );
 
@@ -120,8 +126,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      * FILL IN THE BLANK
      *
      */
-    const votes$: Observable<{[id: string]: Vote[]}> = Observable.combineLatest(
-        eliminated$, removed$,
+    this.votes$ = Observable.combineLatest(eliminated$, removed$,
         ( elims, removeds ) => this.distributeVotes(_.union(elims, removeds))
     );
 
@@ -129,7 +134,32 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      * Purely a convenience stream, calculates the total number of votes contained in each vote distribution
      * (note that this is necessary because the total number of votes will decrease as votes are exhausted)
      */
-    this.totalVotes$ = votes$.map(dict => _.reduce(dict, (sum = 0, votes, candId)=>  sum + votes.length, 0) );
+    this.totalVotes$ = this.votes$.map(dict => _.reduce(dict, (sum = 0, votes, candId)=>  sum + votes.length, 0) );
+
+
+    /**
+     *
+     * @type {Observable<R>}
+     */
+    this.isGameOver$ = this.votes$.map( voteDict => this.isGameOver( voteDict ) );
+
+  /*
+   * Jeff, this was a perfectly valid approach, and it worked just fine. The only thing that makes my approach "better" is that
+   * it's simpler - it defines it as a function of one stream rather than two.
+   *
+   this.isGameOver$ = Observable.combineLatest( this.cands$, this.totalVotes$,
+      (cands, numVotes) =>
+          cands.some( cand => cand.score >= numVotes * 0.5 )
+      );
+    );*/
+
+
+
+    this.isStart$ = this.round$.map( roundNum => roundNum > 1 );
+
+    this.skipToEnds$.withLatestFrom( this.isGameOver$, this.round$ ).subscribe( ([click, gameOver, rd]) => {
+      if (rd < 12) this.roundClicks$.next( 1 );
+    } );
 
 
     /**
@@ -139,7 +169,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
     this.cands$ = Observable.combineLatest(
         eliminated$,
         removed$,
-        votes$,
+        this.votes$,
         ( elims, removeds, votes ) =>
             <Array<Candidate>> mutateAll( this.poll.candidates, ( cand )=>(<Candidate> {
                 votes: votes[cand.id],
@@ -152,28 +182,6 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
             }), Candidate)
     );
 
-    /*
-     * Jeff: This is perfectly
-     *
-     * Return true if any candidates have more than 50% of the active votes
-     */
-    this.isGameOver$ = Observable.combineLatest(this.cands$,this.totalVotes$,
-        (cands,numVotes) =>
-            cands.some(cand => cand.score >= numVotes * 0.5)
-    );
-
-    this.isStart$ = this.round$.map(roundNum => roundNum > 1);
-
-
-    /**
-     *  
-     */
-
-
-
-    this.skipToEnds$.withLatestFrom( this.isGameOver$ , this.round$).subscribe( ([click, gameOver, rd]) => {
-      if (rd < 12) this.roundClicks$.next(1);
-    } );
 
 
     /* Use these for testing
@@ -231,10 +239,26 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
     );
   }
 
-  private isGameOver(cands: Candidate[]): boolean {
-    //TODO based on the vote distribution, do we have a winner? i.e. does one candidate have > 50% of the votes
+  /**
+   * based on the vote distribution, do we have a winner? i.e. does one candidate have > 50% of the votes
+   * @param votes a map of candidate ID's to the set of votes they currently hold
+   * @returns {boolean} whether or not we have a winner
+   */
+  private isGameOver(votes: {[id:string]: Vote[]}): boolean {
+    //TODO donald
 
     return false;
+  }
+
+  /**
+   *
+   * @param votes a map of candidate ID's to the set of votes they currently hold
+   *
+   * @return { } the number of the round in which the election will be won.
+   */
+  private findWinningRound(votes: {[id: string]: Vote[]}): number {
+  //TODO donald
+    return 12;
   }
 
 }
