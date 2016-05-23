@@ -1,15 +1,17 @@
 {
-  "ambientDependencies": {
+  "name": "rcv-sim",
+  "version": false,
+  "dependencies": {
+    "d3": "registry:npm/d3#3.0.0+20160211003958",
+    "lodash": "registry:npm/lodash#4.0.0+20160416211519"
+  },
+  "globalDependencies": {
     "core-js": "registry:dt/core-js#0.0.0+20160317120654",
-    "jasmine": "registry:dt/jasmine#2.2.0+20160317120654",
+    "jasmine": "registry:dt/jasmine#2.2.0+20160505161446",
+    "node": "registry:dt/node#6.0.0+20160514165920",
+    "seamless-immutable": "github:epublic/browser/tools/manual-typings/seamless-immutable.d.ts#302e0797aa8e70622beda3b7f4090ab19ee48c89",
     "source-map": "registry:dt/source-map#0.0.0+20160317120654",
     "uglify-js": "registry:dt/uglify-js#2.6.1+20160316155526",
     "webpack": "registry:dt/webpack#1.12.9+20160321060707"
-  },
-  "dependencies": {
-    "d3": "registry:npm/d3#3.0.0+20160211003958",
-    "lodash": "registry:npm/lodash#4.0.0+20160305082308",
-    "moment": "registry:npm/moment#2.10.5+20160211003958",
-    "zone.js": "github:gdi2290/typed-zone.js"
   }
 }

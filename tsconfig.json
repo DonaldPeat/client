@@ -1,24 +1,14 @@
 {
-    "compilerOptions": {
-        "module": "commonjs",
-        "target": "es5",
-        "noImplicitAny": false,
-        "sourceMap": true,
-        "emitDecoratorMetadata": true,
-        "experimentalDecorators": true,
-        "moduleResolution": "node",
-        "outDir": "./.idea-out"
-    },
-
-    "awesomeTypescriptLoaderOptions": {
-      "emitRequireType": true
-    },
-
-    "exclude": [
-        "typings/browser.d.ts",
-        "typings/browser",
-        "node_modules"
-    ],
-    "compileOnSave": false,
-    "buildOnSave": false
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "removeComments": false
+  },
+  "exclude": [
+    "node_modules"
+  ]
 }

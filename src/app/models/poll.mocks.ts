@@ -27,10 +27,9 @@ const votes: Vote[] = [
     new Vote(["2", "0", "1"])
 ];
 
-export const mockPoll: Poll =
-
-                 Poll.mutable({
+export const mockPoll: Poll = {
+  id: 'id-mock-poll',
   title: "Dummy Poll",
   candidates: candidates,
   votes: votes 
-                                   });
+}

@@ -22,34 +22,48 @@ import {PieSunBurstComponent} from "./pie.sunburst";
 @Component({
   selector: 'results-inner',
   directives: [CandidateBarComponent, PieSunBurstComponent],
+  styles: [
+      `.control-bar{
+            align-self: center;
+            margin: 5px 0;
+       }`
+  ],
   template: `
      <div layout="column" layout-align="start stretch" class="results-wrapper" layout-fill>
-        <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$"></pie-sunburst> 
-         <div>
-            <span>
-                <button (click)="progressToStart();">From Start</button>
-                <button (click)="roundClicks$.next(-1);" id="next" #prev>Previous Round</button>
-                <strong>{{round$ | async}}</strong>
-                <button (click)="roundClicks$.next(1);" id="prev" #next>Next Round</button>
-                <button (click)="progressToWinner();">End Result</button>
-            </span>
-         </div>
+        <div layout="row" class="control-bar">
+       
+          <button md-button (click)="progressToStart();">From Start</button>
+          <button md-button  (click)="roundClicks$.next(-1);" [disabled]="!(isStart$ | async)" id="next" #prev>Previous Round</button>
+          <div><strong>{{round$ | async}}</strong></div>
+          <button md-button (click)="roundClicks$.next(1);" [disabled]="(isGameOver$ | async)" id="prev" #next>Next Round</button>
+          <button md-button (click)="skipToEnds$.next();">End Result</button>
+        </div>
          
-          <div>The total number of votes: {{totalVotes$ | async}}</div>
+         <div layout="row" layout-align="space-around stretch">
+         <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$" flex></pie-sunburst> 
+         <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$" flex></pie-sunburst> 
+
+         </div>
+
+
+          <!--div>The total number of votes: {{totalVotes$ | async}}</div>
           <div *ngFor="let cand of cands$ | async">
             <candidate-bar [candidate]="cand"></candidate-bar>
-        </div>
+        </div-->
     </div>
   `
 })
 export class ResultsDumbComponent implements OnInit, AfterViewInit {
   @Input() poll: Poll;
 
-  private cands$: Observable<Candidate[]>;
   private round$: Observable<number>;
+  private cands$: Observable<Candidate[]>;
   private totalVotes$: Observable<number>;
+  private isGameOver$: Observable<boolean>;
+  private isStart$: Observable<boolean>;
 
   roundClicks$: Subject<number> = BehaviorSubject.create();
+  skipToEnds$: Subject<any> = BehaviorSubject.create();
 
   /**
    * The goal here is to specify the entire execution of the application declaratively, vis a vis our definitions of
@@ -75,7 +89,9 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      * https://github.com/Reactive-Extensions/RxJS/blob/master/doc/api/core/operators/scan.md
 
      */
-    const round$ = this.roundClicks$.scan((result, change)=> result + change , 0);
+
+
+    this.round$ = this.roundClicks$.scan((result, change)=> result + change , 0);
 
     /**
      * The number of eliminated candidates should always be one less than the current round. For obvious domain reasons,
@@ -85,7 +101,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      * the result.
      *
      */
-    const eliminated$ = round$.map( roundNum => // given a round number
+    const eliminated$ = this.round$.map( roundNum => // given a round number
             Array( roundNum - 1 ).fill( "Horse's ass" ).reduce( ( elims, i ) => // "for i in range(0, round-1), pass an array of eliminated cands,"
                elims.concat( [ this.findLoser( elims ).id ] ) // find the next cand to eliminate and add them to the array
                 , [] ) // starting with an empty array  
@@ -113,15 +129,14 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      * Purely a convenience stream, calculates the total number of votes contained in each vote distribution
      * (note that this is necessary because the total number of votes will decrease as votes are exhausted)
      */
-    const totalVotes$: Observable<number> =
-              votes$.map(dict => _.reduce(dict, (sum = 0, votes, candId)=>  sum + votes.length, 0) );
+    this.totalVotes$ = votes$.map(dict => _.reduce(dict, (sum = 0, votes, candId)=>  sum + votes.length, 0) );
 
 
     /**
      * This is essentially a convenience stream too, coalescing values obtained from the other streams into a single
      * "state" construct that can be passed around / referenced in templates more easily.
      */
-    const cands$: Observable<Candidate[]> = Observable.combineLatest(
+    this.cands$ = Observable.combineLatest(
         eliminated$,
         removed$,
         votes$,
@@ -137,16 +152,35 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
             }), Candidate)
     );
 
+    /*
+     * Jeff: This is perfectly
+     *
+     * Return true if any candidates have more than 50% of the active votes
+     */
+    this.isGameOver$ = Observable.combineLatest(this.cands$,this.totalVotes$,
+        (cands,numVotes) =>
+            cands.some(cand => cand.score >= numVotes * 0.5)
+    );
 
-    this.round$ = round$;
-    this.totalVotes$ = totalVotes$;
-    this.cands$ = cands$;
+    this.isStart$ = this.round$.map(roundNum => roundNum > 1);
 
-/* Use these for testing
-    votes$.subscribe(x => {console.info('votes'); console.info(x);});
-    eliminated$.subscribe(x => {console.info('elim'); console.info(x);});
-    round$.subscribe(x => console.info(`ROUND ${x}`));
-    cands$.subscribe(x => {console.info('CANDS'); console.info(x);}); */
+
+    /**
+     *  
+     */
+
+
+
+    this.skipToEnds$.withLatestFrom( this.isGameOver$ , this.round$).subscribe( ([click, gameOver, rd]) => {
+      if (rd < 12) this.roundClicks$.next(1);
+    } );
+
+
+    /* Use these for testing
+        votes$.subscribe(x => {console.info('votes'); console.info(x);});
+        eliminated$.subscribe(x => {console.info('elim'); console.info(x);});
+        round$.subscribe(x => console.info(`ROUND ${x}`));
+        cands$.subscribe(x => {console.info('CANDS'); console.info(x);}); */
   }
 
   ngAfterViewInit(){
@@ -196,4 +230,11 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
     )}
     );
   }
+
+  private isGameOver(cands: Candidate[]): boolean {
+    //TODO based on the vote distribution, do we have a winner? i.e. does one candidate have > 50% of the votes
+
+    return false;
+  }
+
 }

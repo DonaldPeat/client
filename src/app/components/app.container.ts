@@ -1,13 +1,9 @@
-import {
-    Component, OnInit, ViewEncapsulation, ChangeDetectionStrategy, ViewChild, ElementRef, AfterViewInit
-} from "@angular/core";
-import {AsyncPipe} from "@angular/common";
-import {Devtools} from '@ngrx/devtools';
-import {NavComponent} from "./nav/nav.component";
+import { Component, ViewEncapsulation, AfterViewInit } from '@angular/core';
+import { Devtools } from '@ngrx/devtools';
+import { NavComponent } from './nav/nav.component';
 import { MenuComponent } from './menu/menu.component';
 import { AppService } from '../state/app.service';
-import * as d3 from "d3";
-import { Polls } from '../models/polls';
+
 
 @Component({
   selector   : "rcv-app",
