@@ -66,14 +66,15 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                     color = d3.scale.category20b().domain(ids),
                     colorInner = d3.scale.category10(),
                     percentFormat = d3.format(".0%"),
-                    pie = d3.layout.pie().value(d => d),
+                    outerPie = d3.layout.pie().value(d => d.score), // Jeff/donald disregard this warning - inaccuracy in the typedef
+                    innerPie = d3.layout.pie(),
                     angle = (d) => {
                         let i = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
                         return i > 90 ? i - 180 : i;
                     };
 
                 //Outer Circle
-                let outerCircle = this.g.selectAll('.arc').data(pie(scores)),
+                let outerCircle = this.g.selectAll('.arc').data(outerPie(cands)),
                     outerCirEnters = outerCircle.enter(), // elements we're drawing for the first time
                     outerCirExits = outerCircle.exit(); // elements that are being removed
 
@@ -81,11 +82,14 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                 outerCirEnters.append("path")
                     .attr('class', 'arc')
                     .attr("d", this.arc)
-                    .attr("fill", d => color(d.data))
+                    .attr("fill", d => {
+                      debugger;
+                      return color( d.data.score )
+                    })
                     .each(d => this.element.nativeElement._current = d); //stores the current angles in ._current
 
                 //Outer Circle Labels
-                let outerCirText = this.g.selectAll('.txt').data(pie(scores)),
+                let outerCirText = this.g.selectAll('.txt').data(outerPie(cands)),
                     outerCirTextEnters = outerCirText.enter(),
                     outerCirTextExits = outerCirText.exit();
 
@@ -110,7 +114,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                     .remove();
 
                 //Draws inner circle
-                let innerCircle = this.g.selectAll('.centerArc').data(pie(numVotes)),
+                let innerCircle = this.g.selectAll('.centerArc').data(innerPie(numVotes)),
                     innerCirEnters = innerCircle.enter(),
                     innerCirExits = innerCircle.exit();
 
@@ -122,7 +126,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                     .each(d => this.element.nativeElement._currentAng = d);//stores current angles in ._currentAng
 
                 //Inner Circle Labels
-                let innerCirText = this.g.selectAll('.innerTxt').data(pie(numVotes)),
+                let innerCirText = this.g.selectAll('.innerTxt').data(innerPie(numVotes)),
                     innerCirTextEnters = innerCirText.enter(),
                     innerCirTextExits = innerCirText.exit();
 
