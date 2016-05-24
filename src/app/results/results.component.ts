@@ -119,7 +119,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      * TODO - stream of "manual-removals" of candidates by the user
      */
 
-    const removed$ = this.candRemovals$.scan((result,change) => result.concat([change]),[]);
+    const removed$ = this.candRemovals$.scan((result,change) => result.concat([change]),[]).startWith([]);
 
     /**
      * Who has what votes at any given point is a pure function of the votes and which candidates have been eliminated
