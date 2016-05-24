@@ -11,6 +11,7 @@ import { mutate, mutateAll } from '../common/mutability';
 import { CandidateBarComponent } from './candidate.bar';
 import { PieBarComponent } from './pie.bar.alt';
 import {PieSunBurstComponent} from "./pie.sunburst";
+import {ChordDiagramComponent} from "./chord";
 
 
 /**
@@ -19,7 +20,7 @@ import {PieSunBurstComponent} from "./pie.sunburst";
 
 @Component({
   selector: 'results-inner',
-  directives: [CandidateBarComponent, PieSunBurstComponent],
+  directives: [CandidateBarComponent, PieSunBurstComponent,ChordDiagramComponent],
   styles: [
       `.control-bar{
             align-self: center;
@@ -40,7 +41,7 @@ import {PieSunBurstComponent} from "./pie.sunburst";
          <div layout="row" layout-align="space-around stretch">
          <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$" flex></pie-sunburst> 
          <div flex style="align-self: center"> CHORD DIAGRAM</div>
-
+         <chord [cands$]="cands$" [totalVotes$] = "totalVotes$" flex></chord>
          </div>
 
 
