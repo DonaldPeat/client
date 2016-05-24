@@ -73,7 +73,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                 let i = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
                 return i > 90 ? i - 180 : i;
               };
-
+            
           //A single selection for each candidate; bind every elements to this single selection
           let candGs      = this.g.selectAll( '.cand-g' ).data( outerPie( cands ), d => d.data.id ),
               candGEnters = candGs.enter(), // elements we're drawing for the first time
@@ -96,7 +96,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                  .each( d => this.element.nativeElement._current = d ) //stores the current angles in ._current //
                  .on("click", d => this.removals$.next(d.data.id) );
 
-          enterGs.filter( d => d.endAngle - d.startAngle > .2 ) // Jeff: we can filter here so those labels are never placed (see comment on https://github.com/RCVSim/client/commit/9d5042d72c86f0e1da9e38737d8bfdd8abf8d703#diff-1b3d57e760bc62d6198570b6b2cc9ad4R110
+          enterGs // Jeff: we can filter here so those labels are never placed (see comment on https://github.com/RCVSim/client/commit/9d5042d72c86f0e1da9e38737d8bfdd8abf8d703#diff-1b3d57e760bc62d6198570b6b2cc9ad4R110
                  .append( "text" )
                  .attr( "class", "txt" )
                  .attr( "dy", ".35em" )
@@ -107,10 +107,11 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                    return `translate(${this.arc.centroid( d )}) rotate(${angle( d )})`;
                  } )
                  .style( "fill", "white" )
-                 .text( d => percentFormat( d.value / tot ) );
+                 .text( d => percentFormat( d.value / tot ) )
+                 .on("click" , d => this.removals$.next(d.data.id) );
           //  .each( d => this.element.nativeElement._text = d.value ); //stores the current value in ._text // <-- Jeff: Why?
 
-          enterGs.filter( d => d.endAngle - d.startAngle > .2 )
+          enterGs
                  .append( "text" )
                  .attr( "class", "candLabel" )
                  .attr( "transform", d => {
@@ -119,7 +120,8 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                  } )
                  .attr( "text-anchor", "middle" )
                  .style( "fill", "black" )
-                 .text( d => d.data.name );
+                 .text( d => d.data.name )
+                 .on("click", d => this.removals$.next(d.data.id) );
 
            //Jeff: I haven't touched the innerCircle stuff - can you refactor this the way I did the outer?
 
@@ -138,7 +140,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                .each( d => this.element.nativeElement._currentAng = d );//stores current angles in ._currentAng
 
            //Draws Inner Circle Labels
-           innerCircleGs.filter( d => d.endAngle - d.startAngle > .2 )
+           innerCircleGs
                 .append( "text" )
                 .attr( "class", "innerTxt" )
                 .attr( "dy", "-0.10em" )
@@ -158,10 +160,31 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                 innerCircleLabels = innerCircle.select('.innerTxt');
 
             //Removes a eliminated candidate from our visualization elements
-            arcs.filter( d => d.data.eliminated ).remove();
-            scoreLabels.filter( d => d.data.eliminated ).remove();
-            nameLabels.filter( d => d.data.eliminated ).remove();
-            innerCircleGExits.remove();
+            arcs.filter( d => d.data.eliminated ).style("opacity",0);
+            arcs.filter( d => !d.data.eliminated ).style("opacity",1);
+            scoreLabels.filter( d => d.data.eliminated ).style("opacity",0);
+            scoreLabels.filter( d => !d.data.eliminated ).style("opacity",1);
+            nameLabels.filter( d => d.data.eliminated ).style("opacity",0);
+            nameLabels.filter( d => !d.data.eliminated ).style("opacity",1);
+
+            //Little Hack; filter the ones that are too small to see to opacity 0, else opacity to 1
+            nameLabels.filter( d => d.endAngle - d.startAngle < .2 )
+                .style("opacity",0);
+
+            nameLabels.filter( d => d.endAngle - d.startAngle > .2 )
+                .style("opacity",1);
+
+            scoreLabels.filter( d => d.endAngle - d.startAngle < .2 )
+                .style("opacity",0);
+
+            scoreLabels.filter( d => d.endAngle - d.startAngle > .2 )
+                .style("opacity",1);
+
+            innerCircleLabels.filter( d => d.endAngle - d.startAngle < .2 )
+                .style("opacity",0);
+
+            innerCircleLabels.filter( d => d.endAngle - d.startAngle > .2 )
+                .style("opacity",1);
 
           //Updates the outerCircle with one less candidate
           arcs
@@ -181,7 +204,6 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                 return `translate(${this.arc.centroid( d )}) rotate(${angle( d )})`;
               } )
               .text( d => percentFormat( d.value / tot ) );
-
 
           //Updates the candidates' name with one less candidate
           nameLabels
