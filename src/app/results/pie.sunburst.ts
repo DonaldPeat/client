@@ -2,7 +2,7 @@
  * Created by Jeffrey on 5/14/2016.
  */
 
-import { Directive, Input, AfterViewInit, OnInit, ElementRef, Renderer, HostListener } from '@angular/core';
+import { Directive, Input, Output, AfterViewInit, OnInit, ElementRef, Renderer, HostListener } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Candidate } from '../models/candidate';
 import * as d3 from 'd3';
@@ -18,11 +18,12 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
 
   @Input() cands$: Observable<Candidate[]>;
   @Input() totalVotes$: Observable<number>;
+  @Output() removals$: Subject<string[]> = BehaviorSubject.create();
 
   private height = 100;
   private width = 350;
   private arc;
-  private centerArc;
+  private innerCircleArc;
   private radius = Math.min( this.width, this.height ) / 2;
   private svg: Selection<any>;
   private g: any;
@@ -66,22 +67,20 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
               color         = d3.scale.category20b().domain( ids ),
               colorInner    = d3.scale.category10(),
               percentFormat = d3.format( ".0%" ),
-              outerPie      = d3.layout.pie().value( d => d.score ), // Jeff/donald disregard this warning - inaccuracy in the typedef
+              outerPie      = d3.layout.pie().value( d => d.isActive ? d.score : 0 ), // Jeff/donald disregard this warning - inaccuracy in the typedef
               innerPie      = d3.layout.pie(),
               angle         = (d) => {
                 let i = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
                 return i > 90 ? i - 180 : i;
               };
-
-
-          //Outer Circle
+            
+          //A single selection for each candidate; bind every elements to this single selection
           let candGs      = this.g.selectAll( '.cand-g' ).data( outerPie( cands ), d => d.data.id ),
               candGEnters = candGs.enter(), // elements we're drawing for the first time
               candGExits  = candGs.exit(); // elements that are being removed
 
           let enterGs = candGEnters
               .append( 'g' ).attr( 'class', 'cand-g' );
-
 
           /*JEFF: take a close look at this refactor. The biggest thing to note is that, rather than creating a separate selection
            * for every type of element we want to add for each candidate, we add a SINGLE selection for each candidate, bind that
@@ -94,9 +93,10 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                  .attr( 'class', 'arc' )
                  .attr( "d", this.arc )
                  .attr( "fill", d => color( d.data.id ) )
-                 .each( d => this.element.nativeElement._current = d ); //stores the current angles in ._current //
+                 .each( d => this.element.nativeElement._current = d ) //stores the current angles in ._current //
+                 .on("click", d => this.removals$.next(d.data.id) );
 
-          enterGs.filter( d => d.endAngle - d.startAngle > .2 ) // Jeff: we can filter here so those labels are never placed (see comment on https://github.com/RCVSim/client/commit/9d5042d72c86f0e1da9e38737d8bfdd8abf8d703#diff-1b3d57e760bc62d6198570b6b2cc9ad4R110
+          enterGs // Jeff: we can filter here so those labels are never placed (see comment on https://github.com/RCVSim/client/commit/9d5042d72c86f0e1da9e38737d8bfdd8abf8d703#diff-1b3d57e760bc62d6198570b6b2cc9ad4R110
                  .append( "text" )
                  .attr( "class", "txt" )
                  .attr( "dy", ".35em" )
@@ -107,74 +107,84 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                    return `translate(${this.arc.centroid( d )}) rotate(${angle( d )})`;
                  } )
                  .style( "fill", "white" )
-                 .text( d => percentFormat( d.value / tot ) );
+                 .text( d => percentFormat( d.value / tot ) )
+                 .on("click" , d => this.removals$.next(d.data.id) );
           //  .each( d => this.element.nativeElement._text = d.value ); //stores the current value in ._text // <-- Jeff: Why?
 
-          enterGs.filter( d => d.endAngle - d.startAngle > .2 )
+          enterGs
                  .append( "text" )
                  .attr( "class", "candLabel" )
-                 .attr( "dy", ".25em" )
                  .attr( "transform", d => {
                    let c = this.arc.centroid( d );
                    return `translate(${c[ 0 ] * 1.65},${c[ 1 ] * 1.65})`;
                  } )
                  .attr( "text-anchor", "middle" )
                  .style( "fill", "black" )
-                 .text( d => d.data.name );
-
-          let arcs        = candGs.select( '.arc' ),
-              scoreLabels = candGs.select( '.txt' ), // Jeff, you should make this name more descriptive, mayble score-label
-              nameLabels  = candGs.select( '.candLabel' );
-
-          /*
-
-
+                 .text( d => d.data.name )
+                 .on("click", d => this.removals$.next(d.data.id) );
 
            //Jeff: I haven't touched the innerCircle stuff - can you refactor this the way I did the outer?
 
            //Draws inner circle
-           let innerCircle    = this.g.selectAll( '.centerArc' ).data( innerPie( numVotes ) ),
-           innerCirEnters = innerCircle.enter(),
-           innerCirExits  = innerCircle.exit();
+           let innerCircle = this.g.selectAll( '.innerCircle-g' ).data( innerPie( numVotes ) ),
+                innerCircleGEnters = innerCircle.enter(),
+                innerCircleGExits  = innerCircle.exit();
+
+           let innerCircleGs = innerCircleGEnters.append('g').attr('class','innerCircle-g');
 
            //Draws inner arcs
-           innerCirEnters.append( "path" )
-           .attr( "class", "centerArc" )
-           .attr( "d", this.centerArc )
-           .attr( "fill", d => colorInner( d.data ) )
-           .each( d => this.element.nativeElement._currentAng = d );//stores current angles in ._currentAng
+           innerCircleGs.append( "path" )
+               .attr( "class", "innerCircleArc" )
+               .attr( "d", this.innerCircleArc )
+               .attr( "fill", d => colorInner( d.data ) )
+               .each( d => this.element.nativeElement._currentAng = d );//stores current angles in ._currentAng
 
-           //Inner Circle Labels
-           let innerCirText       = this.g.selectAll( '.innerTxt' ).data( innerPie( numVotes ) ),
-           innerCirTextEnters = innerCirText.enter(),
-           innerCirTextExits  = innerCirText.exit();
+           //Draws Inner Circle Labels
+           innerCircleGs
+                .append( "text" )
+                .attr( "class", "innerTxt" )
+                .attr( "dy", "-0.10em" )
+                .attr( "text-anchor", "middle" )
+                .attr( "transform", d => {
+                    d.outerRadius = this.radius * 0.9;
+                    return `translate(${this.innerCircleArc.centroid( d )}) rotate(${0})`;
+                } )
+                .style( "fill", "white" )
+                .style( "font-size", "18px" )
+                .text( d => percentFormat( d.value / totalVotes ) );
 
-           //Draws Inner Circle Labels for the first time
-           innerCirTextEnters
-           .append( "text" )
-           .attr( "class", "innerTxt" )
-           .attr( "dy", "-0.10em" )
-           .attr( "text-anchor", "middle" )
-           .attr( "transform", d => {
-           d.outerRadius = this.radius * 0.9;
-           return `translate(${this.centerArc.centroid( d )}) rotate(${0})`;
-           } )
-           .style( "fill", "white" )
-           .style( "font-size", "18px" )
-           .text( d => percentFormat( d.value / totalVotes ) );
+            let arcs        = candGs.select( '.arc' ),
+                scoreLabels = candGs.select( '.txt' ), // Jeff, you should make this name more descriptive, mayble score-label
+                nameLabels  = candGs.select( '.candLabel' ),
+                innerCircleArcs = innerCircle.select('.innerCircleArc'),
+                innerCircleLabels = innerCircle.select('.innerTxt');
 
-           //removes label in slices that have less than 2 degrees.
-           this.g.selectAll( '.innerTxt' )
-           .filter( d => d.endAngle - d.startAngle < .2 )
-           .remove();
+            //Removes a eliminated candidate from our visualization elements
+            arcs.filter( d => d.data.eliminated ).style("opacity",0);
+            arcs.filter( d => !d.data.eliminated ).style("opacity",1);
+            scoreLabels.filter( d => d.data.eliminated ).style("opacity",0);
+            scoreLabels.filter( d => !d.data.eliminated ).style("opacity",1);
+            nameLabels.filter( d => d.data.eliminated ).style("opacity",0);
+            nameLabels.filter( d => !d.data.eliminated ).style("opacity",1);
 
-           //Removes a eliminated candidate from our visualization elements
-           outerCircleExits.remove();
-           /!*      These are not necessary anymore, because removing outerCircleExits removes the parent g
-           outerCirTextExits.remove();
-           candLabelsExit.remove();*!/
-           */
+            //Little Hack; filter the ones that are too small to see to opacity 0, else opacity to 1
+            nameLabels.filter( d => d.endAngle - d.startAngle < .2 )
+                .style("opacity",0);
 
+            nameLabels.filter( d => d.endAngle - d.startAngle > .2 )
+                .style("opacity",1);
+
+            scoreLabels.filter( d => d.endAngle - d.startAngle < .2 )
+                .style("opacity",0);
+
+            scoreLabels.filter( d => d.endAngle - d.startAngle > .2 )
+                .style("opacity",1);
+
+            innerCircleLabels.filter( d => d.endAngle - d.startAngle < .2 )
+                .style("opacity",0);
+
+            innerCircleLabels.filter( d => d.endAngle - d.startAngle > .2 )
+                .style("opacity",1);
 
           //Updates the outerCircle with one less candidate
           arcs
@@ -195,7 +205,6 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
               } )
               .text( d => percentFormat( d.value / tot ) );
 
-
           //Updates the candidates' name with one less candidate
           nameLabels
               .transition().duration( 650 )
@@ -205,31 +214,24 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
               } )
               .text( d => d.data.name ); //Jeff, you'll never need to change the name
 
-
-          /*
-
-
-
            //Updates the inner Circle with one less candidate
-           innerCircle
-           .transition().duration( 650 )
-           .attrTween( "d", d => {
-           let interpolate = d3.interpolate( this.element.nativeElement._currentAng, d );
-           this.element.nativeElement._currentAng = interpolate( 0 );
-           return t => this.centerArc( interpolate( t ) )
-           } );
+           innerCircleArcs
+               .transition().duration( 650 )
+               .attrTween( "d", d => {
+                   let interpolate = d3.interpolate( this.element.nativeElement._currentAng, d );
+                   this.element.nativeElement._currentAng = interpolate( 0 );
+                   return t => this.innerCircleArc( interpolate( t ) )
+                } );
 
 
            //Updates the inner circle labels with one less candidate.
-           innerCirText
-           .transition().duration( 650 )
-           .attr( "transform", d => {
-           d.outerRadius = this.radius * 0.9;
-           return `translate(${this.centerArc.centroid( d )}) rotate(${0})`;
-           } )
-           .text( d => percentFormat( d.value / totalVotes ) );
-           */
-
+           innerCircleLabels
+               .transition().duration( 650 )
+               .attr( "transform", d => {
+                   d.outerRadius = this.radius * 0.9;
+                   return `translate(${this.innerCircleArc.centroid( d )}) rotate(${0})`;
+                } )
+                .text( d => percentFormat( d.value / totalVotes ) );
 
         } );
 
@@ -253,7 +255,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                  .innerRadius( this.radius * 0.9 )
                  .outerRadius( this.radius * 1.8 );
 
-    this.centerArc = d3.svg.arc()
+    this.innerCircleArc = d3.svg.arc()
                        .innerRadius( 0 )
                        .outerRadius( this.radius * 0.9 );
 

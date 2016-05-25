@@ -39,7 +39,7 @@ import {ChordDiagramComponent} from "./chord";
         </div>
          
          <div layout="row" layout-align="space-around stretch">
-         <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$" flex></pie-sunburst> 
+         <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$" (removals$) = "candRemovals$.next($event)" flex></pie-sunburst> 
          <div flex style="align-self: center"> CHORD DIAGRAM</div>
          <chord [cands$]="cands$" [totalVotes$] = "totalVotes$" flex></chord>
          </div>
@@ -62,6 +62,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
   private isGameOver$: Observable<boolean>;
   private isStart$: Observable<boolean>;
 
+  candRemovals$: Subject<string> = BehaviorSubject.create();
   roundClicks$: Subject<number> = BehaviorSubject.create();
   skipToEnds$: Subject<any> = BehaviorSubject.create();
 
@@ -118,7 +119,8 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
     /**
      * TODO - stream of "manual-removals" of candidates by the user
      */
-    const removed$: Observable<string[]> = Observable.of([]);
+
+    const removed$ = this.candRemovals$.scan((result,change) => result.concat([change]),[]).startWith([]);
 
     /**
      * Who has what votes at any given point is a pure function of the votes and which candidates have been eliminated
@@ -198,7 +200,6 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      */
     this.roundClicks$.next(1);
   }
-
 
   private findLoser(alreadyEliminated: string[]){
     let isEliminated = (id: string) => _.includes((alreadyEliminated || []), id),
