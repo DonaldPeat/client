@@ -20,18 +20,21 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
   @Input() totalVotes$: Observable<number>;
   @Output() removals$: Subject<string[]> = BehaviorSubject.create();
 
-  private height = 100;
-  private width = 350;
+  private height;
+  private width;
+
   private arc;
   private innerCircleArc;
-  private radius = Math.min( this.width, this.height ) / 2;
+  private radius = () => Math.min( this.width, this.height ) / 5;
   private svg: Selection<any>;
   private g: any;
   private screenWidth$: Subject<number> = BehaviorSubject.create();
 
-  @HostListener( "window:resize", [ '$event' ] )
+  @HostListener( "window:resize")
   private onResize(event) {
-    this.screenWidth$.next( event.target.innerWidth );
+    this.width = this.height = this.element.nativeElement.clientWidth;
+
+    this.screenWidth$.next(  this.width);
   }
 
 
@@ -49,10 +52,11 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
      */
     Observable.combineLatest( this.cands$, this.screenWidth$, this.totalVotes$ ).subscribe(
         ([cands, width, totalVotes]) => {
+          console.log( 'WIDTH: ' + width );
+           this.svg.attr( 'width', width ); // update the screen width - if it hasn't changed, this has no effect
+           this.g.attr( "transform", `translate(${this.width / 2 },${this.height / 2})` );
 
-          //this.svg.attr( 'width', width ); // update the screen width - if it hasn't changed, this has no effect
-
-          let actives       = mutable( cands ).filter( cand => cand.isActive ), // don't include eliminated candidates
+           let actives       = mutable( cands ).filter( cand => cand.isActive ), // don't include eliminated candidates
               tot           = actives.reduce( (sum, cand) => sum + cand.score, 0 ), //the total # of active votes
               allyVotes     = actives.reduce( (result, cand) => {
                 result[ cand.id ] = cand.getInboundAllyVotes();
@@ -102,8 +106,8 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                  .attr( "dy", ".35em" )
                  .attr( "text-anchor", "middle" )
                  .attr( "transform", d => {
-                   d.outerRadius = this.radius * 1.8;
-                   d.innerRadius = this.radius * 0.9;
+                   d.outerRadius = this.radius() * 1.8;
+                   d.innerRadius = this.radius() * 0.9;
                    return `translate(${this.arc.centroid( d )}) rotate(${angle( d )})`;
                  } )
                  .style( "fill", "white" )
@@ -130,21 +134,21 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                  .attr( "x", d => {
                      let c = this.arc.centroid( d ),
                      midAngle = Math.atan2(c[1], c[0]),
-                     x = Math.cos(midAngle) * this.radius * 3,
+                     x = Math.cos(midAngle) * this.radius() * 3,
                      sign = x > 0 ? 1 : -1;
                      return d.x = x + ( 5 * sign );
                  } )
                  .attr( "y", d => {
                    let c = this.arc.centroid( d ),
                    midAngle = Math.atan2(c[1] , c[0]),
-                   y =  Math.sin(midAngle) * this.radius * 3;
+                   y =  Math.sin(midAngle) * this.radius() * 3;
                    d.y = y;
                    return y;
                   })
                  .attr( "text-anchor", d => {
                      let c = this.arc.centroid( d ),
                      midAngle = Math.atan2(c[1], c[0]),
-                     x = Math.cos(midAngle) * this.radius;
+                     x = Math.cos(midAngle) * this.radius();
                      return x > 0 ? "start" : "end";
                  })
                  .style( "fill", "black" )
@@ -185,7 +189,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                 .attr( "dy", "-0.10em" )
                 .attr( "text-anchor", "middle" )
                 .attr( "transform", d => {
-                    d.outerRadius = this.radius * 0.9;
+                    d.outerRadius = this.radius() * 0.9;
                     return `translate(${this.innerCircleArc.centroid( d )}) rotate(${0})`;
                 } )
                 .style( "fill", "white" )
@@ -256,8 +260,8 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
           scoreLabels
               .transition().duration( 650 )
               .attr( "transform", d => {
-                d.outerRadius = this.radius * 1.8;
-                d.innerRadius = this.radius * 0.9;
+                d.outerRadius = this.radius() * 1.8;
+                d.innerRadius = this.radius() * 0.9;
                 return `translate(${this.arc.centroid( d )}) rotate(${angle( d )})`;
               } )
               .text( d => percentFormat( d.value / tot ) );
@@ -276,14 +280,14 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
               .attr( "x", d => {
                   let c = this.arc.centroid( d ),
                       midAngle = Math.atan2(c[1] , c[0] ),
-                      x = Math.cos(midAngle) * this.radius * 3,
+                      x = Math.cos(midAngle) * this.radius() * 3,
                       sign = x > 0 ? 1 : -1;
                   return d.x = x + ( 5 * sign );
               } )
               .attr( "y", d => {
                   let c = this.arc.centroid( d ),
                       midAngle = Math.atan2(c[1] , c[0] ),
-                      y =  Math.sin(midAngle) * this.radius * 3;
+                      y =  Math.sin(midAngle) * this.radius() * 3;
                   d.y = y;
                   return y;
               }); //Jeff, you'll never need to change the name
@@ -311,7 +315,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
            innerCircleLabels
                .transition().duration( 650 )
                .attr( "transform", d => {
-                   d.outerRadius = this.radius * 0.9;
+                   d.outerRadius = this.radius() * 0.9;
                    return `translate(${this.innerCircleArc.centroid( d )}) rotate(${0})`;
                 } )
                 .text( d => percentFormat( d.value / totalVotes ) );
@@ -324,25 +328,25 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
     /**
      * This only runs once, creating
      */
-    let initWidth = this.element.nativeElement.clientWidth;
 
+    this.width = this.height = this.element.nativeElement.clientWidth;
     this.svg = d3.select( this.element.nativeElement )
                  .append( 'svg' )
-                 .attr( 'width', initWidth )
-                 .attr( 'height', `${this.height * 2 + 15}px` );
+                 .attr( 'width', `${this.width}` )
+                 .attr( 'height', `${this.height}` );
 
     this.g = this.svg.append( 'g' )
-                 .attr( "transform", "translate(300,100)" );
+                 .attr( "transform", `translate(${this.width /2 },${this.height/2})` );
 
     this.arc = d3.svg.arc()
-                 .innerRadius( this.radius * 0.9 )
-                 .outerRadius( this.radius * 1.8 );
+                 .innerRadius( this.radius() * 0.9 )
+                 .outerRadius( this.radius() * 1.8 );
 
     this.innerCircleArc = d3.svg.arc()
                        .innerRadius( 0 )
-                       .outerRadius( this.radius * 0.9 );
+                       .outerRadius( this.radius() * 0.9 );
 
-    this.screenWidth$.next( initWidth );
+    this.screenWidth$.next( this.width );
   }
 
 }

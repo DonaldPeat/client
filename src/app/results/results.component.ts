@@ -20,7 +20,7 @@ import {ChordDiagramComponent} from "./chord";
 
 @Component({
   selector: 'results-inner',
-  directives: [CandidateBarComponent, PieSunBurstComponent,ChordDiagramComponent],
+  directives: [CandidateBarComponent, PieSunBurstComponent, ChordDiagramComponent],
   styles: [
       `.control-bar{
             align-self: center;
@@ -30,7 +30,6 @@ import {ChordDiagramComponent} from "./chord";
   template: `
      <div layout="column" layout-align="start stretch" class="results-wrapper" layout-fill>
         <div layout="row" class="control-bar">
-       
           <button md-button (click)="progressToStart();">From Start</button>
           <button md-button  (click)="roundClicks$.next(-1);" [disabled]="!(isStart$ | async)" id="next" #prev>Previous Round</button>
           <div><strong>{{round$ | async}}</strong></div>
@@ -39,9 +38,8 @@ import {ChordDiagramComponent} from "./chord";
         </div>
          
          <div layout="row" layout-align="space-around stretch">
-         <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$" (removals$) = "candRemovals$.next($event)" flex></pie-sunburst> 
-         <div flex style="align-self: center"> CHORD DIAGRAM</div>
-         <chord [cands$]="cands$" [totalVotes$] = "totalVotes$" flex></chord>
+           <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$" (removals$) = "candRemovals$.next($event)" flex></pie-sunburst> 
+           <chord [cands$]="cands$" [totalVotes$] = "totalVotes$" flex></chord>
          </div>
 
 
