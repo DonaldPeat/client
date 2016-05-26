@@ -134,14 +134,14 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                  .attr( "x", d => {
                      let c = this.arc.centroid( d ),
                      midAngle = Math.atan2(c[1], c[0]),
-                     x = Math.cos(midAngle) * this.radius() * 3,
+                     x = Math.cos(midAngle) * this.radius() * 1.95,
                      sign = x > 0 ? 1 : -1;
                      return d.x = x + ( 5 * sign );
                  } )
                  .attr( "y", d => {
                    let c = this.arc.centroid( d ),
                    midAngle = Math.atan2(c[1] , c[0]),
-                   y =  Math.sin(midAngle) * this.radius() * 3;
+                   y =  Math.sin(midAngle) * this.radius() * 1.95;
                    d.y = y;
                    return y;
                   })
@@ -280,14 +280,14 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
               .attr( "x", d => {
                   let c = this.arc.centroid( d ),
                       midAngle = Math.atan2(c[1] , c[0] ),
-                      x = Math.cos(midAngle) * this.radius() * 3,
+                      x = Math.cos(midAngle) * this.radius() * 1.95,
                       sign = x > 0 ? 1 : -1;
                   return d.x = x + ( 5 * sign );
               } )
               .attr( "y", d => {
                   let c = this.arc.centroid( d ),
                       midAngle = Math.atan2(c[1] , c[0] ),
-                      y =  Math.sin(midAngle) * this.radius() * 3;
+                      y =  Math.sin(midAngle) * this.radius() * 1.95;
                   d.y = y;
                   return y;
               }); //Jeff, you'll never need to change the name
@@ -297,8 +297,8 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                 .transition().duration( 650 )
                 .attr( { x1: d => this.arc.centroid(d)[0] * 1.3,
                     y1: d => this.arc.centroid(d)[1] * 1.3,
-                    x2: d => d.x - d.x * 0.15,
-                    y2: d => d.y - d.y * 0.15,
+                    x2: d => d.x - d.x * 0.05,
+                    y2: d => d.y - d.y * 0.05,
                 });
 
            //Updates the inner Circle with one less candidate
