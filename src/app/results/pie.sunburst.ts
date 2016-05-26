@@ -92,8 +92,8 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
           enterGs.append( "path" )
                  .attr( 'class', 'arc' )
                  .attr( "d", this.arc )
-                 .attr( "fill", d => color( d.data.id ) )
-                 .each( d => this.element.nativeElement._current = d ) //stores the current angles in ._current //
+                 .attr( "fill" , d => color(d.data.id))
+                 .each( d => this.element.nativeElement._current = d) //stores the current angles in ._current //
                  .on("click", d => this.removals$.next(d.data.id) );
 
           enterGs // Jeff: we can filter here so those labels are never placed (see comment on https://github.com/RCVSim/client/commit/9d5042d72c86f0e1da9e38737d8bfdd8abf8d703#diff-1b3d57e760bc62d6198570b6b2cc9ad4R110
@@ -111,17 +111,56 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                  .on("click" , d => this.removals$.next(d.data.id) );
           //  .each( d => this.element.nativeElement._text = d.value ); //stores the current value in ._text // <-- Jeff: Why?
 
-          enterGs
-                 .append( "text" )
-                 .attr( "class", "candLabel" )
+          let enterCandLabelGs = enterGs
+              .append( 'g' ).attr( 'class', 'candLabel-g' );
+
+          //black dot for candLabel
+          enterCandLabelGs.append( "circle" )
+                 .attr( "class" , "label-dot" )
+                 .attr( { x: 0, y : 0, r : 2, fill: "#000", } )
                  .attr( "transform", d => {
-                   let c = this.arc.centroid( d );
-                   return `translate(${c[ 0 ] * 1.65},${c[ 1 ] * 1.65})`;
+                     let c = this.arc.centroid( d );
+                     return `translate(${c[ 0 ] * 1.30},${c[ 1 ] * 1.30})`;
+                 });
+
+            ///Draw candLabel for first time
+          enterCandLabelGs
+                 .append( "text" )
+                 .attr( "class" , "label-text" )
+                 .attr( "x", d => {
+                     let c = this.arc.centroid( d ),
+                     midAngle = Math.atan2(c[1], c[0]),
+                     x = Math.cos(midAngle) * this.radius * 3,
+                     sign = x > 0 ? 1 : -1;
+                     return d.x = x + ( 5 * sign );
                  } )
-                 .attr( "text-anchor", "middle" )
+                 .attr( "y", d => {
+                   let c = this.arc.centroid( d ),
+                   midAngle = Math.atan2(c[1] , c[0]),
+                   y =  Math.sin(midAngle) * this.radius * 3;
+                   d.y = y;
+                   return y;
+                  })
+                 .attr( "text-anchor", d => {
+                     let c = this.arc.centroid( d ),
+                     midAngle = Math.atan2(c[1], c[0]),
+                     x = Math.cos(midAngle) * this.radius;
+                     return x > 0 ? "start" : "end";
+                 })
                  .style( "fill", "black" )
-                 .text( d => d.data.name )
+                 .text( d => d.data.name.split(" ")[1] )
                  .on("click", d => this.removals$.next(d.data.id) );
+
+            enterCandLabelGs.append( "line" )
+                .attr( "class" , "label-line")
+                .attr( { x1: d => this.arc.centroid(d)[0] * 1.3,
+                    y1: d => this.arc.centroid(d)[1] * 1.3,
+                    x2: d => d.x,
+                    y2: d => d.y,
+                })
+                .attr("stroke", "black")
+                .attr("stroke-width", 1)
+                .attr("fill", "none");
 
            //Jeff: I haven't touched the innerCircle stuff - can you refactor this the way I did the outer?
 
@@ -155,7 +194,9 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
 
             let arcs        = candGs.select( '.arc' ),
                 scoreLabels = candGs.select( '.txt' ), // Jeff, you should make this name more descriptive, mayble score-label
-                nameLabels  = candGs.select( '.candLabel' ),
+                candLabelDots  = candGs.select( '.label-dot' ),
+                candLabelLabels  = candGs.select( '.label-text' ),
+                candLabelLines  = candGs.select( '.label-line' ),
                 innerCircleArcs = innerCircle.select('.innerCircleArc'),
                 innerCircleLabels = innerCircle.select('.innerTxt');
 
@@ -164,14 +205,30 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
             arcs.filter( d => !d.data.eliminated ).style("opacity",1);
             scoreLabels.filter( d => d.data.eliminated ).style("opacity",0);
             scoreLabels.filter( d => !d.data.eliminated ).style("opacity",1);
-            nameLabels.filter( d => d.data.eliminated ).style("opacity",0);
-            nameLabels.filter( d => !d.data.eliminated ).style("opacity",1);
+            candLabelDots.filter( d => d.data.eliminated ).style("opacity",0);
+            candLabelDots.filter( d => !d.data.eliminated ).style("opacity",1);
+            candLabelLabels.filter( d => d.data.eliminated ).style("opacity",0);
+            candLabelLabels.filter( d => !d.data.eliminated ).style("opacity",1);
+            candLabelLines.filter( d => d.data.eliminated ).style("opacity",0);
+            candLabelLines.filter( d => !d.data.eliminated ).style("opacity",1);
 
             //Little Hack; filter the ones that are too small to see to opacity 0, else opacity to 1
-            nameLabels.filter( d => d.endAngle - d.startAngle < .2 )
+            candLabelDots.filter( d => d.endAngle - d.startAngle < .2 )
                 .style("opacity",0);
 
-            nameLabels.filter( d => d.endAngle - d.startAngle > .2 )
+            candLabelDots.filter( d => d.endAngle - d.startAngle > .2 )
+                .style("opacity",1);
+
+            candLabelLabels.filter( d => d.endAngle - d.startAngle < .2 )
+                .style("opacity",0);
+
+            candLabelLabels.filter( d => d.endAngle - d.startAngle > .2 )
+                .style("opacity",1);
+
+            candLabelLines.filter( d => d.endAngle - d.startAngle < .2 )
+                .style("opacity",0);
+
+            candLabelLines.filter( d => d.endAngle - d.startAngle > .2 )
                 .style("opacity",1);
 
             scoreLabels.filter( d => d.endAngle - d.startAngle < .2 )
@@ -205,14 +262,40 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
               } )
               .text( d => percentFormat( d.value / tot ) );
 
-          //Updates the candidates' name with one less candidate
-          nameLabels
+          //Updates the candidates' dot with one less candidate
+          candLabelDots
               .transition().duration( 650 )
               .attr( "transform", d => {
-                let c = this.arc.centroid( d );
-                return `translate(${c[ 0 ] * 1.65},${c[ 1 ] * 1.65})`;
+                  let c = this.arc.centroid( d );
+                  return `translate(${c[ 0 ] * 1.30},${c[ 1 ] * 1.30})`;
+              });
+
+          //Updates the candidates' name with one less candidate
+          candLabelLabels
+              .transition().duration( 650 )
+              .attr( "x", d => {
+                  let c = this.arc.centroid( d ),
+                      midAngle = Math.atan2(c[1] , c[0] ),
+                      x = Math.cos(midAngle) * this.radius * 3,
+                      sign = x > 0 ? 1 : -1;
+                  return d.x = x + ( 5 * sign );
               } )
-              .text( d => d.data.name ); //Jeff, you'll never need to change the name
+              .attr( "y", d => {
+                  let c = this.arc.centroid( d ),
+                      midAngle = Math.atan2(c[1] , c[0] ),
+                      y =  Math.sin(midAngle) * this.radius * 3;
+                  d.y = y;
+                  return y;
+              }); //Jeff, you'll never need to change the name
+
+            //Updates the candidates' line with one less candidate
+            candLabelLines
+                .transition().duration( 650 )
+                .attr( { x1: d => this.arc.centroid(d)[0] * 1.3,
+                    y1: d => this.arc.centroid(d)[1] * 1.3,
+                    x2: d => d.x - d.x * 0.15,
+                    y2: d => d.y - d.y * 0.15,
+                });
 
            //Updates the inner Circle with one less candidate
            innerCircleArcs
