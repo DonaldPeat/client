@@ -19,6 +19,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
   @Input() cands$: Observable<Candidate[]>;
   @Input() totalVotes$: Observable<number>;
   @Output() removals$: Subject<string[]> = BehaviorSubject.create();
+  @Output() hoverCand$: Subject<string> = BehaviorSubject.create();
 
   private height;
   private width;
@@ -98,7 +99,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                  .attr( "d", this.arc )
                  .attr( "fill" , d => color(d.data.id))
                  .each( d => this.element.nativeElement._current = d) //stores the current angles in ._current //
-                 .on("click", d => this.removals$.next(d.data.id) );
+                 .on( "click", d => this.removals$.next(d.data.id) );
 
           enterGs // Jeff: we can filter here so those labels are never placed (see comment on https://github.com/RCVSim/client/commit/9d5042d72c86f0e1da9e38737d8bfdd8abf8d703#diff-1b3d57e760bc62d6198570b6b2cc9ad4R110
                  .append( "text" )
@@ -206,47 +207,42 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                 innerCircleLabels = innerCircle.select('.innerTxt');
 
             //Removes a eliminated candidate from our visualization elements
-            arcs.filter( d => d.data.eliminated ).style("opacity",0);
-            arcs.filter( d => !d.data.eliminated ).style("opacity",1);
-            scoreLabels.filter( d => d.data.eliminated ).style("opacity",0);
-            scoreLabels.filter( d => !d.data.eliminated ).style("opacity",1);
-            candLabelDots.filter( d => d.data.eliminated ).style("opacity",0);
-            candLabelDots.filter( d => !d.data.eliminated ).style("opacity",1);
-            candLabelLabels.filter( d => d.data.eliminated ).style("opacity",0);
-            candLabelLabels.filter( d => !d.data.eliminated ).style("opacity",1);
-            candLabelLines.filter( d => d.data.eliminated ).style("opacity",0);
-            candLabelLines.filter( d => !d.data.eliminated ).style("opacity",1);
+            let setOpacity = (value) => {
+                //Little Hack; filter the ones that are too small to see to opacity 0, else opacity to 1
+                arcs.filter( d => d.data.eliminated ).style("opacity",0);
+                arcs.filter( d => !d.data.eliminated ).style("opacity",value);
+                scoreLabels.filter(d => d.data.eliminated || d.endAngle - d.startAngle < .2).style("opacity", 0);
+                scoreLabels.filter(d => !d.data.eliminated && d.endAngle - d.startAngle > .2).style("opacity", value);
+                candLabelDots.filter(d => d.data.eliminated || d.endAngle - d.startAngle < .2).style("opacity", 0);
+                candLabelDots.filter(d => !d.data.eliminated && d.endAngle - d.startAngle > .2).style("opacity", value);
+                candLabelLabels.filter(d => d.data.eliminated || d.endAngle - d.startAngle < .2).style("opacity", 0);
+                candLabelLabels.filter(d => !d.data.eliminated && d.endAngle - d.startAngle > .2).style("opacity", value);
+                candLabelLines.filter(d => d.data.eliminated || d.endAngle - d.startAngle < .2).style("opacity", 0);
+                candLabelLines.filter(d => !d.data.eliminated && d.endAngle - d.startAngle > .2).style("opacity", value);
+                innerCircleLabels.filter(d => d.endAngle - d.startAngle < .2).style("opacity", 0);
+                innerCircleLabels.filter(d => d.endAngle - d.startAngle > .2).style("opacity", value);
+            };
 
-            //Little Hack; filter the ones that are too small to see to opacity 0, else opacity to 1
-            candLabelDots.filter( d => d.endAngle - d.startAngle < .2 )
-                .style("opacity",0);
+           arcs.on("mouseover", d => {
+               let opacity = 0.3;
 
-            candLabelDots.filter( d => d.endAngle - d.startAngle > .2 )
-                .style("opacity",1);
+               setOpacity(opacity);
+               innerCircleArcs.style("opacity", opacity);
 
-            candLabelLabels.filter( d => d.endAngle - d.startAngle < .2 )
-                .style("opacity",0);
+               arcs.filter( t => t.data.id == d.data.id).style("opacity",1);
+               scoreLabels.filter( t => t.data.id == d.data.id).style("opacity", 1);
+               candLabelDots.filter( t => t.data.id == d.data.id).style("opacity", 1);
+               candLabelLabels.filter( t => t.data.id == d.data.id).style("opacity", 1);
+               candLabelLines.filter( t => t.data.id == d.data.id).style("opacity", 1);
 
-            candLabelLabels.filter( d => d.endAngle - d.startAngle > .2 )
-                .style("opacity",1);
+               this.hoverCand$.next(d.data.id);
+           })
+               .on("mouseout", () => {
+                   setOpacity(1);
+                   innerCircleArcs.style("opacity", 1);
+               });
 
-            candLabelLines.filter( d => d.endAngle - d.startAngle < .2 )
-                .style("opacity",0);
-
-            candLabelLines.filter( d => d.endAngle - d.startAngle > .2 )
-                .style("opacity",1);
-
-            scoreLabels.filter( d => d.endAngle - d.startAngle < .2 )
-                .style("opacity",0);
-
-            scoreLabels.filter( d => d.endAngle - d.startAngle > .2 )
-                .style("opacity",1);
-
-            innerCircleLabels.filter( d => d.endAngle - d.startAngle < .2 )
-                .style("opacity",0);
-
-            innerCircleLabels.filter( d => d.endAngle - d.startAngle > .2 )
-                .style("opacity",1);
+            setOpacity(1);
 
           //Updates the outerCircle with one less candidate
           arcs
