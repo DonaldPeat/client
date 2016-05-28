@@ -207,7 +207,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                 innerCircleLabels = innerCircle.select('.innerTxt');
 
             //Removes a eliminated candidate from our visualization elements
-            let setOpacity = (value) => {
+            let setAllGsOpacity = (value) => {
                 //Little Hack; filter the ones that are too small to see to opacity 0, else opacity to 1
                 arcs.filter( d => d.data.eliminated ).style("opacity",0);
                 arcs.filter( d => !d.data.eliminated ).style("opacity",value);
@@ -223,11 +223,13 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                 innerCircleLabels.filter(d => d.endAngle - d.startAngle > .2).style("opacity", value);
             };
 
-           arcs.on("mouseover", d => {
-               let opacity = 0.3;
+            setAllGsOpacity(1);
 
-               setOpacity(opacity);
-               innerCircleArcs.style("opacity", opacity);
+           arcs.on("mouseover", d => {
+               let opacityValue = 0.3;
+
+               setAllGsOpacity(opacityValue);
+               innerCircleArcs.style("opacity", opacityValue);
 
                arcs.filter( t => t.data.id == d.data.id).style("opacity",1);
                scoreLabels.filter( t => t.data.id == d.data.id).style("opacity", 1);
@@ -238,11 +240,10 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                this.hoverCand$.next(d.data.id);
            })
                .on("mouseout", () => {
-                   setOpacity(1);
+                   setAllGsOpacity(1);
                    innerCircleArcs.style("opacity", 1);
                });
 
-            setOpacity(1);
 
           //Updates the outerCircle with one less candidate
           arcs
@@ -280,6 +281,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                       x = Math.cos(midAngle) * this.radius() * 1.95,
                       sign = x > 0 ? 1 : -1;
                   d.x = x + 5 * sign;
+                  this.element.nativeElement._x = x;
                   return x + 10 * sign;
               } )
               .attr( "y", d => {
@@ -289,8 +291,8 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                       dx = Math.pow(d.x - this.arc.centroid(d)[0] * 1.45 , 2),
                       dy = Math.pow(y - this.arc.centroid(d)[1] * 1.45 , 2);
                   d.y = Math.sin(midAngle) * this.radius() * 1.95;
-                  if ( Math.sqrt(dx+dy) < 40 && d.endAngle - d.startAngle > .2 ) {
-                      return Math.sin(midAngle) * this.radius() * 2.2;
+                  if ( Math.sqrt(dx+dy) < width*0.052 && (d.endAngle - d.startAngle > .2) ) {
+                      return Math.sin(midAngle) * this.radius() * 2.5;
                   }
                   return y;
               }); //Jeff, you'll never need to change the name
