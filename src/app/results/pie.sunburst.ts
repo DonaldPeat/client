@@ -281,7 +281,6 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                       x = Math.cos(midAngle) * this.radius() * 1.95,
                       sign = x > 0 ? 1 : -1;
                   d.x = x + 5 * sign;
-                  this.element.nativeElement._x = x;
                   return x + 10 * sign;
               } )
               .attr( "y", d => {
@@ -291,7 +290,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                       dx = Math.pow(d.x - this.arc.centroid(d)[0] * 1.45 , 2),
                       dy = Math.pow(y - this.arc.centroid(d)[1] * 1.45 , 2);
                   d.y = Math.sin(midAngle) * this.radius() * 1.95;
-                  if ( Math.sqrt(dx+dy) < width*0.052 && (d.endAngle - d.startAngle > .2) ) {
+                  if ( Math.sqrt(dx+dy) < width*0.052 && d.endAngle - d.startAngle > .2 ) {
                       return Math.sin(midAngle) * this.radius() * 2.5;
                   }
                   return y;
