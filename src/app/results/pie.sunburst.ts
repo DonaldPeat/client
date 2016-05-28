@@ -107,7 +107,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                  .attr( "text-anchor", "middle" )
                  .attr( "transform", d => {
                    d.outerRadius = this.radius() * 1.8;
-                   d.innerRadius = this.radius() * 0.9;
+                   d.innerRadius = this.radius() * 0.6;
                    return `translate(${this.arc.centroid( d )}) rotate(${angle( d )})`;
                  } )
                  .style( "fill", "white" )
@@ -124,7 +124,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                  .attr( { x: 0, y : 0, r : 2, fill: "#000", } )
                  .attr( "transform", d => {
                      let c = this.arc.centroid( d );
-                     return `translate(${c[ 0 ] * 1.30},${c[ 1 ] * 1.30})`;
+                     return `translate(${c[ 0 ] * 1.45},${c[ 1 ] * 1.45})`;
                  });
 
             ///Draw candLabel for first time
@@ -136,13 +136,14 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                      midAngle = Math.atan2(c[1], c[0]),
                      x = Math.cos(midAngle) * this.radius() * 1.95,
                      sign = x > 0 ? 1 : -1;
-                     return d.x = x + ( 5 * sign );
+                     d.x = x + 5 * sign;
+                     return x + 10 * sign;
                  } )
                  .attr( "y", d => {
                    let c = this.arc.centroid( d ),
                    midAngle = Math.atan2(c[1] , c[0]),
-                   y =  Math.sin(midAngle) * this.radius() * 1.95;
-                   d.y = y;
+                   y =  Math.sin(midAngle) * this.radius() * 2.1;
+                   d.y = Math.sin(midAngle) * this.radius() * 1.95;
                    return y;
                   })
                  .attr( "text-anchor", d => {
@@ -157,10 +158,10 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
 
             enterCandLabelGs.append( "line" )
                 .attr( "class" , "label-line")
-                .attr( { x1: d => this.arc.centroid(d)[0] * 1.3,
-                    y1: d => this.arc.centroid(d)[1] * 1.3,
-                    x2: d => d.x,
-                    y2: d => d.y,
+                .attr( { x1: d => this.arc.centroid(d)[0] * 1.45,
+                    y1: d => this.arc.centroid(d)[1] * 1.45,
+                    x2: d => d.x - d.x * 0.035,
+                    y2: d => d.y - d.y * 0.035,
                 })
                 .attr("stroke", "black")
                 .attr("stroke-width", 1)
@@ -189,7 +190,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                 .attr( "dy", "-0.10em" )
                 .attr( "text-anchor", "middle" )
                 .attr( "transform", d => {
-                    d.outerRadius = this.radius() * 0.9;
+                    d.outerRadius = this.radius() * 0.6;
                     return `translate(${this.innerCircleArc.centroid( d )}) rotate(${0})`;
                 } )
                 .style( "fill", "white" )
@@ -261,7 +262,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
               .transition().duration( 650 )
               .attr( "transform", d => {
                 d.outerRadius = this.radius() * 1.8;
-                d.innerRadius = this.radius() * 0.9;
+                d.innerRadius = this.radius() * 0.6;
                 return `translate(${this.arc.centroid( d )}) rotate(${angle( d )})`;
               } )
               .text( d => percentFormat( d.value / tot ) );
@@ -271,7 +272,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
               .transition().duration( 650 )
               .attr( "transform", d => {
                   let c = this.arc.centroid( d );
-                  return `translate(${c[ 0 ] * 1.30},${c[ 1 ] * 1.30})`;
+                  return `translate(${c[ 0 ] * 1.45},${c[ 1 ] * 1.45})`;
               });
 
           //Updates the candidates' name with one less candidate
@@ -283,17 +284,17 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                       x = Math.cos(midAngle) * this.radius() * 1.95,
                       sign = x > 0 ? 1 : -1;
                   d.x = x + 5 * sign;
-                  return d.x;
+                  return x + 10 * sign;
               } )
               .attr( "y", d => {
                   let c = this.arc.centroid( d ),
                       midAngle = Math.atan2(c[1] , c[0] ),
-                      y =  Math.sin(midAngle) * this.radius() * 1.95,
-                      dx = Math.pow(d.x - this.arc.centroid(d)[0] * 1.3 , 2),
-                      dy = Math.pow(y - this.arc.centroid(d)[1] * 1.3 , 2);
-                  d.y = y;
-                  if ( Math.sqrt(dx+dy) < 35 && d.endAngle - d.startAngle > .2 ) {
-                      return Math.sin(midAngle) * this.radius() * 2.10;
+                      y =  Math.sin(midAngle) * this.radius() * 2.10,
+                      dx = Math.pow(d.x - this.arc.centroid(d)[0] * 1.45 , 2),
+                      dy = Math.pow(y - this.arc.centroid(d)[1] * 1.45 , 2);
+                  d.y = Math.sin(midAngle) * this.radius() * 1.95;
+                  if ( Math.sqrt(dx+dy) < 40 && d.endAngle - d.startAngle > .2 ) {
+                      return Math.sin(midAngle) * this.radius() * 2.2;
                   }
                   return y;
               }); //Jeff, you'll never need to change the name
@@ -301,10 +302,10 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
             //Updates the candidates' line with one less candidate
             candLabelLines
                 .transition().duration( 650 )
-                .attr( { x1: d => this.arc.centroid(d)[0] * 1.3,
-                    y1: d => this.arc.centroid(d)[1] * 1.3,
-                    x2: d => d.x - d.x * 0.03,
-                    y2: d => d.y - d.y * 0.03,
+                .attr( { x1: d => this.arc.centroid(d)[0] * 1.45,
+                    y1: d => this.arc.centroid(d)[1] * 1.45,
+                    x2: d => d.x - d.x * 0.035,
+                    y2: d => d.y - d.y * 0.035,
                 });
 
            //Updates the inner Circle with one less candidate
@@ -321,7 +322,7 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
            innerCircleLabels
                .transition().duration( 650 )
                .attr( "transform", d => {
-                   d.outerRadius = this.radius() * 0.9;
+                   d.outerRadius = this.radius() * 0.6;
                    return `translate(${this.innerCircleArc.centroid( d )}) rotate(${0})`;
                 } )
                 .text( d => percentFormat( d.value / totalVotes ) );
@@ -345,12 +346,12 @@ export class PieSunBurstComponent implements OnInit, AfterViewInit {
                  .attr( "transform", `translate(${this.width /2 },${this.height/2})` );
 
     this.arc = d3.svg.arc()
-                 .innerRadius( this.radius() * 0.9 )
+                 .innerRadius( this.radius() * 0.6 )
                  .outerRadius( this.radius() * 1.8 );
 
     this.innerCircleArc = d3.svg.arc()
                        .innerRadius( 0 )
-                       .outerRadius( this.radius() * 0.9 );
+                       .outerRadius( this.radius() * 0.6 );
 
     this.screenWidth$.next( this.width );
   }
