@@ -142,7 +142,8 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      *
      * @type {Observable<R>}
      */
-    this.isGameOver$ = this.votes$.map( voteDict => this.isGameOver( voteDict ) );
+    this.isGameOver$ = this.votes$.map( voteDict => {
+      return this.isGameOver( voteDict )} );
 
   /*
    * Jeff, this was a perfectly valid approach, and it worked just fine. The only thing that makes my approach "better" is that
@@ -182,6 +183,15 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
                 photo     : cand.photo
             }), Candidate)
     );
+
+
+    let tot = this.cands$.scan((result, cands) => {
+      return cands.filter( cand => cand.isActive ).reduce((sum, cand)=> {
+        return sum + cand.score
+      } , 0);
+    });
+
+    tot.subscribe( x => console.log(x) );
 
 
 
@@ -246,7 +256,6 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
    */
   private isGameOver(votes: {[id:string]: Vote[]}): boolean {
     //TODO donald
-
     return false;
   }
 
