@@ -137,14 +137,6 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      */
     this.totalVotes$ = this.votes$.map(dict => _.reduce(dict, (sum = 0, votes, candId)=>  sum + votes.length, 0) );
 
-
-    /**
-     *
-     * @type {Observable<R>}
-     */
-    this.isGameOver$ = this.cands$.map( cands => {
-      return this.isGameOver( cands )} );
-
   /*
    * Jeff, this was a perfectly valid approach, and it worked just fine. The only thing that makes my approach "better" is that
    * it's simpler - it defines it as a function of one stream rather than two.
@@ -155,13 +147,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
       );
     );*/
 
-
-
     this.isStart$ = this.round$.map( roundNum => roundNum > 1 );
-
-    this.skipToEnds$.withLatestFrom( this.isGameOver$, this.round$ ).subscribe( ([click, gameOver, rd]) => {
-      if (rd < 12) this.roundClicks$.next( 1 );
-    } );
 
 
     /**
@@ -184,21 +170,20 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
             }), Candidate)
     );
 
-    let tot = this.cands$.scan( (result, cands) => {
-      let filtered = cands.filter( cand => cand.isActive );
-      let ret = filtered.reduce( (sum, cand)=> {
-        return sum + cand.score
-      }, 0 );
-      debugger;
-      return ret;
-    } ).startWith( 0 );
-
-    tot.subscribe( x => console.log( x ) );
-
-
     /* TODO: investigate further why this is reemitting the value of cands$ rather than the result of the
 
 
+     /**
+     *
+     * @type {Observable<R>}
+     */
+    this.isGameOver$ = this.cands$.map( cands => {
+      console.log(cands);
+      return this.isGameOver( cands ) } );
+
+    // this.skipToEnds$.withLatestFrom( this.isGameOver$, this.round$ ).subscribe( ([click, gameOver, rd]) => {
+    //   if (rd < 12) this.roundClicks$.next( 1 );
+    // } );
 
 
      /* Use these for testing
@@ -260,9 +245,16 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
    * @param votes a map of candidate ID's to the set of votes they currently hold
    * @returns {boolean} whether or not we have a winner
    */
-  private isGameOver(votes: Candidate[]): boolean {
+  private isGameOver(cands: Candidate[]): boolean {
     //TODO donald
-    return false;
+
+    let tot = cands.filter( cand => cand.isActive).reduce( (sum, cand) => {
+      return sum + cand.score;
+    } , 0 );
+
+    return _.reduce( cands, (result,cand) => {
+      return cand.score >= tot * 0.5;
+    } );
   }
 
   /**
