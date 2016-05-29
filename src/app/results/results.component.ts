@@ -142,8 +142,8 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      *
      * @type {Observable<R>}
      */
-    this.isGameOver$ = this.votes$.map( voteDict => {
-      return this.isGameOver( voteDict )} );
+    this.isGameOver$ = this.cands$.map( cands => {
+      return this.isGameOver( cands )} );
 
   /*
    * Jeff, this was a perfectly valid approach, and it worked just fine. The only thing that makes my approach "better" is that
@@ -184,22 +184,28 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
             }), Candidate)
     );
 
-
-    let tot = this.cands$.scan((result, cands) => {
-      return cands.filter( cand => cand.isActive ).reduce((sum, cand)=> {
+    let tot = this.cands$.scan( (result, cands) => {
+      let filtered = cands.filter( cand => cand.isActive );
+      let ret = filtered.reduce( (sum, cand)=> {
         return sum + cand.score
-      } , 0);
-    });
+      }, 0 );
+      debugger;
+      return ret;
+    } ).startWith( 0 );
 
-    tot.subscribe( x => console.log(x) );
+    tot.subscribe( x => console.log( x ) );
+
+
+    /* TODO: investigate further why this is reemitting the value of cands$ rather than the result of the
 
 
 
-    /* Use these for testing
-        votes$.subscribe(x => {console.info('votes'); console.info(x);});
-        eliminated$.subscribe(x => {console.info('elim'); console.info(x);});
-        round$.subscribe(x => console.info(`ROUND ${x}`));
-        cands$.subscribe(x => {console.info('CANDS'); console.info(x);}); */
+
+     /* Use these for testing
+         votes$.subscribe(x => {console.info('votes'); console.info(x);});
+         eliminated$.subscribe(x => {console.info('elim'); console.info(x);});
+         round$.subscribe(x => console.info(`ROUND ${x}`));
+         cands$.subscribe(x => {console.info('CANDS'); console.info(x);}); */
   }
 
   ngAfterViewInit(){
@@ -254,7 +260,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
    * @param votes a map of candidate ID's to the set of votes they currently hold
    * @returns {boolean} whether or not we have a winner
    */
-  private isGameOver(votes: {[id:string]: Vote[]}): boolean {
+  private isGameOver(votes: Candidate[]): boolean {
     //TODO donald
     return false;
   }
