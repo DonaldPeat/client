@@ -3,7 +3,7 @@
  */
 
 import * as _ from 'lodash';
-import { Directive, Input, OnInit, ElementRef, Renderer, HostListener } from '@angular/core';
+import { Directive, Input, OnInit, ElementRef, Renderer, HostListener, AfterViewInit } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Candidate } from '../models/candidate';
 import { Subject } from 'rxjs/Subject';
@@ -14,7 +14,7 @@ import { Selection } from 'd3';
 @Directive( {
   selector: 'chord'
 } )
-export class ChordDiagramComponent implements OnInit/*, AfterViewInit*/ {
+export class ChordDiagramComponent implements OnInit, AfterViewInit {
 
   @Input() cands$: Observable<Candidate[]>;
   @Input() totalVotes$: Observable<number>;
@@ -43,7 +43,6 @@ export class ChordDiagramComponent implements OnInit/*, AfterViewInit*/ {
      */
     Observable.combineLatest( this.cands$, this.screenWidth$, this.totalVotes$ ).subscribe(
         ([cands, width, totalVotes]) => {
-
           let tot                   = cands.reduce( (sum, cand) => sum + cand.score, 1 ), //the total # of active votes
               ids                   = cands.map( cand =>cand.id ),
               allyVotes: number[][] = cands.reduce( (resultArr, cand) => {
@@ -185,6 +184,10 @@ export class ChordDiagramComponent implements OnInit/*, AfterViewInit*/ {
         } )
   }
 
+  ngAfterViewInit(){
+    this.screenWidth$.next( this.element.nativeElement.clientWidth );
+
+  }
 
 }
 
