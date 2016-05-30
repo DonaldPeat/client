@@ -93,6 +93,7 @@ export class ChordDiagramComponent implements OnInit, AfterViewInit {
                       .on( "mouseover", fade( .1 ) ) //fade out unselected relationships
                       .on( "mouseout", fade( 1 ) );  //display all relationships when none selected
 
+           exitingArcs.remove();
           //applied for all arcs
           arcs.attr( "d", d3.svg.arc().innerRadius( innerRadius ).outerRadius( outerRadius ) );
 
@@ -101,6 +102,7 @@ export class ChordDiagramComponent implements OnInit, AfterViewInit {
               enteringChords = chords.enter(),
               exitingChords  = chords.exit();
 
+           // chords.remove();
 
           enteringChords.append('g')
                         .attr('class', 'chord')
@@ -127,10 +129,10 @@ export class ChordDiagramComponent implements OnInit, AfterViewInit {
     this.width = this.height = this.element.nativeElement.clientWidth;
     this.svg = d3.select( this.element.nativeElement )
                  .append( 'svg' )
-                 .attr( 'width', `${this.width}` )
+                 .attr( 'width', `${this.width}` ) //set svg size
                  .attr( 'height', `${this.height}` )
                  .append( 'g' )
-                 .attr( "transform", `translate(${this.width / 2 },${this.height / 2})` );
+                 .attr( "transform", `translate(${this.width / 2 },${this.height / 2})` ); //reposition diagram
     this.screenWidth$.next( this.width );
   }
 
