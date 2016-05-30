@@ -103,7 +103,15 @@ export class ChordDiagramComponent implements OnInit, AfterViewInit {
               exitingChords  = chords.exit();
 
 
-          //TODO(donald) draw the chords
+          enteringChords.append('g')
+                        .attr('class', 'chord')
+                        .selectAll("path")
+                        .data(chord.chords)
+                        .enter().append("path")
+                        .attr("d", d3.svg.chord().radius(innerRadius))
+                        .style("fill", function(d) { return fill(d.target.index); })
+                        .style("opacity", 1);
+
           // note: each candidate has a self-referential chord - you want to hide that.
 
 
