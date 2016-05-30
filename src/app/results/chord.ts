@@ -61,7 +61,7 @@ export class ChordDiagramComponent implements OnInit, AfterViewInit {
                 return resultArr
               }, initMatrix ),
 
-              innerRadius = Math.min( this.width, this.height ) * .41,  //outer arc blocks for labels & mouse selection
+              innerRadius = Math.min( this.width, this.height ) * .337,  //outer arc blocks for labels & mouse selection
               outerRadius = innerRadius * 1.1,
               fill        = d3.scale.category20b().domain( ids ),
 
@@ -111,7 +111,11 @@ export class ChordDiagramComponent implements OnInit, AfterViewInit {
                         .style("fill", function(d) { return fill(d.target.index); })
                         .style("opacity", 1);
 
-          // todo:hide each candidate's self-referential chord
+
+           exitingChords.remove();
+
+
+          // todo:clear svg before updating data
             // todo:adjust shading & color scheme to match pie
 
 
