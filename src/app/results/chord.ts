@@ -47,7 +47,7 @@ export class ChordDiagramComponent implements OnInit, AfterViewInit {
               ids                   = cands.map( cand =>cand.id ),
               initMatrix = ids.map((id, idx)=> {
                 let ret = Array(ids.length).fill(0);
-                ret[idx] = 1;
+                ret[idx] = cands[idx].score;
                 return ret;
               }),
 
@@ -148,6 +148,7 @@ export class ChordDiagramComponent implements OnInit, AfterViewInit {
 
           let ticks = svg.append( "g" ).selectAll( "g" )
                          .data( chord.groups )
+                         .attr('class', 'asdf')
                          .enter().append( "g" ).selectAll( "g" )
                          .data( getCandVoteAngles )
                          .enter().append( "g" )
