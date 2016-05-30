@@ -45,18 +45,25 @@ export class ChordDiagramComponent implements OnInit, AfterViewInit {
         ([cands, width, totalVotes]) => {
           let tot                   = cands.reduce( (sum, cand) => sum + cand.score, 1 ), //the total # of active votes
               ids                   = cands.map( cand =>cand.id ),
+              initMatrix = ids.map((id, idx)=> {
+                let ret = Array(ids.length).fill(0);
+                ret[idx] = 1;
+                return ret;
+              }),
+
               allyVotes: number[][] = cands.reduce( (resultArr, cand) => {
                 let allyVotes: {[id: string]: number} = cand.getInboundAllyVotes(),
                     rowIdx                            = ids.indexOf( cand.id );
                 _.keys( allyVotes ).forEach( candId => {
-                  console.log( "---------------------__TESTING---------------------------" );
+
                   let colIdx = ids.indexOf( candId ),
                       val    = allyVotes[ candId ];
                   resultArr[ rowIdx ][ colIdx ] = val;
                 } );
                 return resultArr
-              }, Array( cands.length ).fill( Array( cands.length ).fill( 1 ) ) );
-          console.log( allyVotes );
+              }, initMatrix );
+
+          console.log( JSON.stringify(allyVotes) );
           /*
            function getDataMatrix(dict) {
            var outerArray = [];
