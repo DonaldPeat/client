@@ -79,7 +79,6 @@ export class ChordDiagramComponent implements OnInit, AfterViewInit {
                               .sortSubgroups( d3.descending )
                               .matrix( voteMatrix );
 
-
           //the arcs that form the outer circle
           let arcs         = this.svg.selectAll( '.cand-arc' ).data( chord.groups ),
               enteringArcs = arcs.enter(),
@@ -112,10 +111,8 @@ export class ChordDiagramComponent implements OnInit, AfterViewInit {
                         .style("fill", function(d) { return fill(d.target.index); })
                         .style("opacity", 1);
 
-          // note: each candidate has a self-referential chord - you want to hide that.
-
-
-          // Method for fading unselected candidates' data
+          // todo:hide each candidate's self-referential chord
+            // todo:adjust shading & color scheme to match pie
 
 
         } )
@@ -123,8 +120,6 @@ export class ChordDiagramComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.screenWidth$.next( this.element.nativeElement.clientWidth );
-
-
     this.width = this.height = this.element.nativeElement.clientWidth;
     this.svg = d3.select( this.element.nativeElement )
                  .append( 'svg' )
@@ -132,11 +127,7 @@ export class ChordDiagramComponent implements OnInit, AfterViewInit {
                  .attr( 'height', `${this.height}` )
                  .append( 'g' )
                  .attr( "transform", `translate(${this.width / 2 },${this.height / 2})` );
-
-
     this.screenWidth$.next( this.width );
-
-
   }
 
 }
