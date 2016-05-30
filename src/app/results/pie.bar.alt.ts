@@ -69,8 +69,8 @@ export class PieBarComponent implements OnInit, AfterViewInit {
                    return wid( sumOfHigherScores );
                  } );
 
-          exits.remove();
-
+            exits.remove();
+            exits.attr('opacity', 0);
           this.redrawFinishLine( width );
 
         } );

@@ -2,7 +2,7 @@
  * Created by Donald on 5/23/16.
  */
 
-
+import * as _ from 'lodash';
 import {Directive, Input, AfterViewInit, OnInit, ElementRef, Renderer, HostListener} from '@angular/core';
 import {Observable} from 'rxjs/Observable';
 import {Candidate} from '../models/candidate';
@@ -19,6 +19,11 @@ export class ChordDiagramComponent implements OnInit/*, AfterViewInit*/ {
 
     @Input() cands$:Observable<Candidate[]>;
     @Input() totalVotes$:Observable<number>;
+
+
+
+
+
 
     private width = 960;
     private height = 500;
@@ -45,18 +50,48 @@ export class ChordDiagramComponent implements OnInit/*, AfterViewInit*/ {
         Observable.combineLatest(this.cands$, this.screenWidth$, this.totalVotes$).subscribe(
             ([cands, width, totalVotes]) => {
 
-                let actives = mutable(cands).filter(cand => cand.isActive), // don't include eliminated candidates
-                    tot = actives.reduce((sum, cand) => sum + cand.score, 0), //the total # of active votes
-                    allyVotes = actives.reduce((result, cand) => {
-                        result[cand.id] = cand.getInboundAllyVotes();
-                        return result
-                    }, {}),
+                let tot = cands.reduce((sum, cand) => sum + cand.score, 0), //the total # of active votes
+                    ids= cands.map(cand =>cand.id),
 
-                    matrix = [ //dummy data matrix for chord diagram to be replaced with candidates' votes/
-                    [10000,  5555, 8888, 2222],
-                    [ 3333, 11111, 2000, 6666],
-                    [ 7777, 22222, 1234, 4321],
-                    [ 4444,   999,  1000, 150]
+                    allyVotes: number[][] = cands.reduce((resultArr, cand) => { //dict of dicts {cand:{cand:int}, cand2:{cand:int2}, etc }
+ /*                       let fakeAllyVOtes ={
+                            'id-mike-huckabee': 10,
+                        }*/
+
+                        let allyVotes: {[id: string]: number} = cand.getInboundAllyVotes(),
+                            rowIdx = ids.indexOf(cand.id);
+                                               //for (let candId in allyVotes)
+                        _.keys(allyVotes).forEach(candId => {
+                            let colIdx = ids.indexOf(candId),
+                                val = allyVotes[candId];
+                                resultArr[rowIdx][colIdx] = val;
+
+                        });
+                        return resultArr
+                    }, Array(cands.length).fill(Array(cands.length).fill(0)));
+
+                    console.log(allyVotes[0]);
+                    /*
+                    function getDataMatrix(dict) {
+                        var outerArray = [];
+                        for (var key in dict) {
+                            for (var innerKey in dict[key]){
+                                var innerArray=[];
+                                innerArray.push(dict[key][innerKey]);
+                            }
+                            outerArray.push(innerArray);
+                        }
+                        return outerArray
+                    };
+
+                   let testMatrix = getDataMatrix(allyVotes);
+                    console.log(testMatrix);
+                */
+                let matrix = [ //dummy data matrix for chord diagram to be replaced with candidates' votes/
+                    [10000,  250, 500, 2500],
+                    [ 5000, 300, 0, 2500],
+                    [ 2500, 0, 0, 0],
+                    [ 2500,  0,  0, 0]
                     ],
 
                     chord = d3.layout.chord()
@@ -66,13 +101,14 @@ export class ChordDiagramComponent implements OnInit/*, AfterViewInit*/ {
 
                     height = 500,
                     innerRadius = Math.min(this.width, this.height) * .41,  //outer arc blocks for labels & mouse selection
-                    outerRadius = this.innerRadius * 1.1,
+                    outerRadius = innerRadius * 1.1,
 
                      fill = d3.scale.ordinal()
                         .domain([d3.range(4).toString()])          //dom & range to be changed to #candidates/votes
                         .range(["#000000", "#FFDD89", "#957244", "#F26223"]),
 
                     svg = d3.select(this.element.nativeElement)
+                        .append("svg")
                         .attr("width", width)
                         .attr("height", height)
                         .append("g")
@@ -123,6 +159,7 @@ export class ChordDiagramComponent implements OnInit/*, AfterViewInit*/ {
                 // Method for fading unselected candidates' data
                 function fade(opacity) {
                     return function(g, i) {
+               
                         svg.selectAll(".chord path")
                             .filter(function(d) { return d.source.index != i && d.target.index != i; })
                             .transition()
