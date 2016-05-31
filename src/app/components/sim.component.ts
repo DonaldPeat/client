@@ -10,8 +10,8 @@ import { Observable } from 'rxjs/Observable';
 import { mutate, mutateAll } from '../common/mutability';
 import { CandidateBarComponent } from '../results/candidate.bar';
 import { PieBarComponent } from '../results/pie.bar.alt';
-import {PieComponent} from "./pie";
-import {ChordComponent} from "./chord";
+import {PieComponent} from "./pie.component";
+import {ChordComponent} from "./chord.component";
 
 /**
 
@@ -37,8 +37,8 @@ import {ChordComponent} from "./chord";
         </div>
          
          <div layout="row" layout-align="space-around stretch">
-           <pie-sunburst [cands$]="cands$" [totalVotes$] = "totalVotes$" (removals$) = "candRemovals$.next($event)" flex></pie-sunburst> 
-           <chord [cands$]="cands$" [totalVotes$] = "totalVotes$" flex></chord>
+           <rcv-pie [cands$]="cands$" [totalVotes$] = "totalVotes$" (removals$) = "candRemovals$.next($event)" flex></rcv-pie> 
+           <rcv-chord [cands$]="cands$" [totalVotes$] = "totalVotes$" flex></rcv-chord>
          </div>
 
 

@@ -12,7 +12,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { mutable } from '../common/mutability';
 
 @Directive( {
-  selector: 'pie-sunburst'
+  selector: 'rcv-pie'
 } )
 export class PieComponent implements OnInit, AfterViewInit {
 
