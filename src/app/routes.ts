@@ -1,16 +1,12 @@
 import { Routes } from '@ngrx/router';
 import { VoteInputContainer } from './vote/vote.container';
-import { ResultsContainer } from './results/results.container';
+import { RcvSimContainer } from './results/sim.container';
 
 
 export const ROUTES: Routes = [
   {
-    path: ':pollId',
-    component: VoteInputContainer
-  },
-  {
-    path: ':pollId/results',
-    component: ResultsContainer
+    path: '/',
+    component: RcvSimContainer
   }
 
 ];
