@@ -27,7 +27,11 @@ export class ChordComponent implements OnInit, AfterViewInit {
 
   @HostListener( "window:resize", [ '$event' ] )
   private onResize(event) {
-    this.screenWidth$.next( event.target.innerWidth );
+
+    this.height = this.element.nativeElement.ownerDocument.body.clientHeight - 100;
+    this.width = this.element.nativeElement.clientWidth;
+
+    this.screenWidth$.next( this.width );
   }
 
   constructor(private element: ElementRef, private renderer: Renderer) {
@@ -126,7 +130,11 @@ export class ChordComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.screenWidth$.next( this.element.nativeElement.clientWidth );
-    this.width = this.height = this.element.nativeElement.clientWidth;
+
+    this.height = this.element.nativeElement.ownerDocument.body.clientHeight - 100;
+    this.width = this.element.nativeElement.clientWidth;
+
+    this.screenWidth$.next( this.width );
     this.svg = d3.select( this.element.nativeElement )
                  .append( 'svg' )
                  .attr( 'width', `${this.width}` ) //set svg size

@@ -33,7 +33,8 @@ export class PieComponent implements OnInit, AfterViewInit {
 
   @HostListener( "window:resize")
   private onResize(event) {
-    this.width = this.height = this.element.nativeElement.clientWidth;
+    this.width = this.element.nativeElement.clientWidth;
+    this.height = this.element.nativeElement.ownerDocument.body.clientHeight - 100;
 
     this.screenWidth$.next(  this.width);
   }
@@ -115,7 +116,6 @@ export class PieComponent implements OnInit, AfterViewInit {
                  .text( d => percentFormat( d.value / tot ) )
                  .on("click" , d => this.removals$.next(d.data.id) );
           //  .each( d => this.element.nativeElement._text = d.value ); //stores the current value in ._text // <-- Jeff: Why?
-
           let enterCandLabelGs = enterGs
               .append( 'g' ).attr( 'class', 'candLabel-g' );
 
@@ -333,7 +333,8 @@ export class PieComponent implements OnInit, AfterViewInit {
      * This only runs once, creating
      */
 
-    this.width = this.height = this.element.nativeElement.clientWidth;
+    this.width = this.element.nativeElement.clientWidth;
+    this.height = this.element.nativeElement.ownerDocument.body.clientHeight - 100;
     this.svg = d3.select( this.element.nativeElement )
                  .append( 'svg' )
                  .attr( 'width', `${this.width}` )
