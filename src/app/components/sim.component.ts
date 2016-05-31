@@ -1,33 +1,32 @@
 import { Component, Input, OnInit, AfterViewInit } from '@angular/core';
 import 'rxjs/Rx';
-import { Poll, IPoll } from '../models/poll';
+import * as d3 from 'd3';
+import { IPoll } from '../models/poll';
 import { Candidate } from '../models/candidate';
 import { Vote } from '../models/vote';
 import * as _ from 'lodash';
 import { Subject } from 'rxjs/Subject';
 import { BehaviorSubject } from 'rxjs/Rx';
 import { Observable } from 'rxjs/Observable';
-import { mutate, mutateAll } from '../common/mutability';
-import { CandidateBarComponent } from '../results/candidate.bar';
-import { PieBarComponent } from '../results/pie.bar.alt';
-import {PieComponent} from "./pie.component";
-import {ChordComponent} from "./chord.component";
+import { mutateAll } from '../common/mutability';
+import { PieComponent } from './pie.component';
+import { ChordComponent } from './chord.component';
 import { LegendComponent } from './legend.component';
 
 /**
 
  */
 
-@Component({
-  selector: 'sim-inner',
-  directives: [ LegendComponent, PieComponent, ChordComponent],
-  styles: [
-      `.control-bar{
+@Component( {
+  selector  : 'sim-inner',
+  directives: [ LegendComponent, PieComponent, ChordComponent ],
+  styles    : [
+    `.control-bar{
             align-self: center;
             margin: 5px 0;
        }`
   ],
-  template: `
+  template  : `
      <div layout="column" layout-align="start stretch" class="results-wrapper" layout-fill>
         <rcv-legend [cands$]="cands$"></rcv-legend>
            <div layout="row" class="control-bar">
@@ -50,7 +49,7 @@ import { LegendComponent } from './legend.component';
         </div-->
     </div>
   `
-})
+} )
 export class SimComponent implements OnInit, AfterViewInit {
   @Input() poll: IPoll;
 
@@ -65,6 +64,15 @@ export class SimComponent implements OnInit, AfterViewInit {
   roundClicks$: Subject<number> = BehaviorSubject.create();
   skipToEnds$: Subject<any> = BehaviorSubject.create();
 
+
+  private get ids() {
+    return this.poll.candidates
+  }
+
+  private get color() {
+    return d3.scale.category20b().domain( this.poll.candidates.map( cand => cand.id ).sort() );
+  }
+
   /**
    *
    * The idea is to define the entire execution of the application up front, by identifying the
@@ -78,7 +86,7 @@ export class SimComponent implements OnInit, AfterViewInit {
    * streams and codify the causal relationships between them into our "reactive architecture".
    *
    */
-  ngOnInit(){
+  ngOnInit() {
     /**
      * The stream (i.e. sequence of values) at the center of our application is the number of the current round.
      * Everything else about the application's state can be derived as a pure function of what round we're in and the
@@ -98,7 +106,7 @@ export class SimComponent implements OnInit, AfterViewInit {
      */
 
 
-    this.round$ = this.roundClicks$.scan((result, change)=> result + change , 0);
+    this.round$ = this.roundClicks$.scan( (result, change)=> result + change, 0 );
 
     /**
      * The number of eliminated candidates should always be one less than the current round. For obvious domain reasons,
@@ -109,17 +117,17 @@ export class SimComponent implements OnInit, AfterViewInit {
      *
      */
     const eliminated$ = this.round$.map( roundNum => // given a round number
-            Array( roundNum - 1 ).fill( "Horse's ass" ).reduce( ( elims, i ) => // "for i in range(0, round-1), pass an array of eliminated cands,"
-               elims.concat( [ this.findLoser( elims ).id ] ) // find the next cand to eliminate and add them to the array
+            Array( roundNum - 1 ).fill( "Horse's ass" ).reduce( (elims, i) => // "for i in range(0, round-1), pass an array of eliminated cands,"
+                    elims.concat( [ this.findLoser( elims ).id ] ) // find the next cand to eliminate and add them to the array
                 , [] ) // starting with an empty array
-                // return the array, i.e. emit the array as the set of currently eliminated candidates.
+        // return the array, i.e. emit the array as the set of currently eliminated candidates.
     );
 
     /**
      * TODO - stream of "manual-removals" of candidates by the user
      */
 
-    const removed$ = this.candRemovals$.scan((result,change) => result.concat([change]),[]).startWith([]);
+    const removed$ = this.candRemovals$.scan( (result, change) => result.concat( [ change ] ), [] ).startWith( [] );
 
     /**
      * Who has what votes at any given point is a pure function of the votes and which candidates have been eliminated
@@ -128,25 +136,25 @@ export class SimComponent implements OnInit, AfterViewInit {
      * FILL IN THE BLANK
      *
      */
-    this.votes$ = Observable.combineLatest(eliminated$, removed$,
-        ( elims, removeds ) => this.distributeVotes(_.union(elims, removeds))
+    this.votes$ = Observable.combineLatest( eliminated$, removed$,
+        (elims, removeds) => this.distributeVotes( _.union( elims, removeds ) )
     );
 
     /**
      * Purely a convenience stream, calculates the total number of votes contained in each vote distribution
      * (note that this is necessary because the total number of votes will decrease as votes are exhausted)
      */
-    this.totalVotes$ = this.votes$.map(dict => _.reduce(dict, (sum = 0, votes, candId)=>  sum + votes.length, 0) );
+    this.totalVotes$ = this.votes$.map( dict => _.reduce( dict, (sum = 0, votes, candId)=> sum + votes.length, 0 ) );
 
-  /*
-   * Jeff, this was a perfectly valid approach, and it worked just fine. The only thing that makes my approach "better" is that
-   * it's simpler - it defines it as a function of one stream rather than two.
-   *
-   this.isGameOver$ = Observable.combineLatest( this.cands$, this.totalVotes$,
-      (cands, numVotes) =>
-          cands.some( cand => cand.score >= numVotes * 0.5 )
-      );
-    );*/
+    /*
+     * Jeff, this was a perfectly valid approach, and it worked just fine. The only thing that makes my approach "better" is that
+     * it's simpler - it defines it as a function of one stream rather than two.
+     *
+     this.isGameOver$ = Observable.combineLatest( this.cands$, this.totalVotes$,
+     (cands, numVotes) =>
+     cands.some( cand => cand.score >= numVotes * 0.5 )
+     );
+     );*/
 
     this.isStart$ = this.round$.map( roundNum => roundNum > 1 );
 
@@ -159,16 +167,18 @@ export class SimComponent implements OnInit, AfterViewInit {
         eliminated$,
         removed$,
         this.votes$,
-        ( elims, removeds, votes ) =>
-            <Array<Candidate>> mutateAll( this.poll.candidates, ( cand )=>(<Candidate> {
-                votes: votes[cand.id],
-                score     : votes[ cand.id ].length,
-                eliminated: _.includes( elims, cand.id ),
-                removed   : _.includes( removeds, cand.id ),
-                name      : cand.name,
-                id        : cand.id,
-                photo     : cand.photo
-            }), Candidate)
+        (elims, removeds, votes) =>
+
+            <Array<Candidate>> mutateAll( this.poll.candidates, (cand)=>(<Candidate> {
+              votes     : votes[ cand.id ],
+              score     : votes[ cand.id ].length,
+              eliminated: _.includes( elims, cand.id ),
+              removed   : _.includes( removeds, cand.id ),
+              name      : cand.name,
+              id        : cand.id,
+              photo     : cand.photo,
+              color     : this.color( cand.id )
+            }), Candidate )
     );
 
     /* TODO: investigate further why this is reemitting the value of cands$ rather than the result of the
@@ -179,73 +189,72 @@ export class SimComponent implements OnInit, AfterViewInit {
      * @type {Observable<R>}
      */
     this.isGameOver$ = this.cands$.map( cands => {
-      console.log(cands);
-      return this.isGameOver( cands ) } );
+      console.log( cands );
+      return this.isGameOver( cands )
+    } );
 
     // this.skipToEnds$.withLatestFrom( this.isGameOver$, this.round$ ).subscribe( ([click, gameOver, rd]) => {
     //   if (rd < 12) this.roundClicks$.next( 1 );
     // } );
 
 
-     /* Use these for testing
-         votes$.subscribe(x => {console.info('votes'); console.info(x);});
-         eliminated$.subscribe(x => {console.info('elim'); console.info(x);});
-         round$.subscribe(x => console.info(`ROUND ${x}`));
-         cands$.subscribe(x => {console.info('CANDS'); console.info(x);}); */
+    /* Use these for testing
+     votes$.subscribe(x => {console.info('votes'); console.info(x);});
+     eliminated$.subscribe(x => {console.info('elim'); console.info(x);});
+     round$.subscribe(x => console.info(`ROUND ${x}`));
+     cands$.subscribe(x => {console.info('CANDS'); console.info(x);}); */
   }
-  
 
-  ngAfterViewInit(){
+
+  ngAfterViewInit() {
     /**
      * this call sets everything in motion
      */
-    this.roundClicks$.next(1);
-  }
-  
-  
-  
-  
-  
-  
-  
-
-  private findLoser(alreadyEliminated: string[]){
-    let isEliminated = (id: string) => _.includes((alreadyEliminated || []), id),
-        scores = this.calcScores(alreadyEliminated),
-        score = (id: string) => scores[id] || 0;
-
-    let loScore = Math.min(...this.poll.candidates.filter(cand => ! isEliminated(cand.id))
-                                   .map(cand => score(cand.id)));
-
-    return this.poll.candidates.filter(cand => !isEliminated(cand.id))
-                .filter(cand => score(cand.id) == loScore)[0]; //TODO randomize
+    this.roundClicks$.next( 1 );
   }
 
 
+  private findLoser(alreadyEliminated: string[]) {
+    let isEliminated = (id: string) => _.includes( (alreadyEliminated || []), id ),
+        scores       = this.calcScores( alreadyEliminated ),
+        score        = (id: string) => scores[ id ] || 0;
 
-  private distributeVotes(eliminated: string[]): {[candId:string]: Vote[]} {
-    let isEliminated = (id: string) => _.includes(eliminated, id),
-        initial =  <{[id: string]: Vote[]}> this.poll.candidates
-                                                .reduce((dict, cand)=> { dict[cand.id]=[]; return dict;}, {});
+    let loScore = Math.min( ...this.poll.candidates.filter( cand => !isEliminated( cand.id ) )
+                                   .map( cand => score( cand.id ) ) );
 
-    return this.poll.votes.reduce((dict, vote)=>{
-      for (let i = 0; i < vote.choices.length; i++){
-        if (! isEliminated(vote.choices[i])) {
-          dict[vote.choices[i]].push(vote);
+    return this.poll.candidates.filter( cand => !isEliminated( cand.id ) )
+               .filter( cand => score( cand.id ) == loScore )[ 0 ]; //TODO randomize
+  }
+
+
+  private distributeVotes(eliminated: string[]): {[candId: string]: Vote[]} {
+    let isEliminated = (id: string) => _.includes( eliminated, id ),
+        initial      = <{[id: string]: Vote[]}> this.poll.candidates
+                                                    .reduce( (dict, cand)=> {
+                                                      dict[ cand.id ] = [];
+                                                      return dict;
+                                                    }, {} );
+
+    return this.poll.votes.reduce( (dict, vote)=> {
+      for (let i = 0; i < vote.choices.length; i++) {
+        if (!isEliminated( vote.choices[ i ] )) {
+          dict[ vote.choices[ i ] ].push( vote );
           return dict;
         }
       }
       // if we get here, then the vote is exhausted, so leave it with the (eliminated) last choice. (or.... ? )
-      dict[vote.choices[0]].push(vote);
+      dict[ vote.choices[ 0 ] ].push( vote );
       return dict;
-    }, initial);
+    }, initial );
 
   }
 
-  private calcScores(eliminated: string[]): {[candId:string]: number}{
-    return <{[candId:string]: number}> _.transform(this.distributeVotes(eliminated), (result, votes, candId)=> {(
-      result[candId] = votes.length
-    )}
+  private calcScores(eliminated: string[]): {[candId: string]: number} {
+    return <{[candId: string]: number}> _.transform( this.distributeVotes( eliminated ), (result, votes, candId)=> {
+          (
+              result[ candId ] = votes.length
+          )
+        }
     );
   }
 
@@ -257,11 +266,11 @@ export class SimComponent implements OnInit, AfterViewInit {
   private isGameOver(cands: Candidate[]): boolean {
     //TODO donald
 
-    let tot = cands.filter( cand => cand.isActive).reduce( (sum, cand) => {
+    let tot = cands.filter( cand => cand.isActive ).reduce( (sum, cand) => {
       return sum + cand.score;
-    } , 0 );
+    }, 0 );
 
-    return _.reduce( cands, (result,cand) => {
+    return _.reduce( cands, (result, cand) => {
       return cand.score >= tot * 0.5;
     } );
   }
@@ -273,7 +282,7 @@ export class SimComponent implements OnInit, AfterViewInit {
    * @return { } the number of the round in which the election will be won.
    */
   private findWinningRound(votes: {[id: string]: Vote[]}): number {
-  //TODO donald
+    //TODO donald
     return 12;
   }
 

@@ -18,6 +18,7 @@ export interface ICandidate {
   eliminated: boolean;
   removed: boolean;
   votes?: Vote[];
+  color?: string;
 }
 
 

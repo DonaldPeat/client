@@ -94,14 +94,12 @@ export class LegendComponent implements OnInit, AfterViewInit {
               tot     = actives.reduce( (sum, cand) => sum + cand.score, 0 ), //the total # of active votes
               wid     = d3.scale.linear()
                           .domain( [ 0, tot ] ) // scale from 0 to 100% of the votes
-                          .range( [ 0, width || 0 ] ), //mapped to 0 to full width of screen
-              ids     = mutable( cands ).map( cand => cand.id ).sort(), // sort alphabetically so each cand's color stays the same
-              color   = d3.scale.category20b().domain( ids );
+                          .range( [ 0, width || 0 ] ); //mapped to 0 to full width of screen
 
           return mutable( cands ).map( cand=>
               ( <Bar>{
                 width: wid( cand.score ),
-                color: color( cand.id ),
+                color: cand.color,
                 label: cand.name,
                 icon : cand.photo,
                 name: cand.name

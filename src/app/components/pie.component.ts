@@ -70,7 +70,6 @@ export class PieComponent implements OnInit, AfterViewInit {
               numVotes      = [ tot, totalVotes - tot ],
               scores        = actives.map( cand => +cand.score ).sort( (x, y)=> y - x ),
               ids           = mutable( cands ).map( cand => cand.id ).sort(), // sort alphabetically so each cand's color stays the same
-              color         = d3.scale.category20b().domain( ids ),
               colorInner    = d3.scale.category10(),
               percentFormat = d3.format( ".0%" ),
               outerPie      = d3.layout.pie().value( d => d.isActive ? d.score : 0 ), // Jeff/donald disregard this warning - inaccuracy in the typedef
@@ -98,7 +97,7 @@ export class PieComponent implements OnInit, AfterViewInit {
           enterGs.append( "path" )
                  .attr( 'class', 'arc' )
                  .attr( "d", this.arc )
-                 .attr( "fill" , d => color(d.data.id))
+                 .attr( "fill" , d => d.data.color)
                  .each( d => this.element.nativeElement._current = d) //stores the current angles in ._current //
                  .on( "click", d => this.removals$.next(d.data.id) );
 

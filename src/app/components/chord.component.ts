@@ -67,8 +67,7 @@ export class ChordComponent implements OnInit, AfterViewInit {
 
               innerRadius = Math.min( this.width, this.height ) * .42,  //outer arc blocks for labels & mouse selection
               outerRadius = innerRadius * 1.07,
-              fill        = d3.scale.category20b().domain( ids ),
-
+              fill        = (idx: number) => cands[idx].color,
               fade        = (opacity)=> {
                 return (g, i) => {
                   this.svg.selectAll( ".chord path" )
@@ -92,8 +91,8 @@ export class ChordComponent implements OnInit, AfterViewInit {
           //applied only for new (i.e. not-yet-drawn) arcs
           enteringArcs.append( 'path' )
                       .attr( 'class', 'cand-arc' )
-                      .style( "fill", function (d) { return fill( d.index );} ) //from d.index
-                      .style( "stroke", function (d) { return fill( d.index ); } )
+                      .style( "fill", d => fill(d.index)) //from d.index
+                      .style( "stroke", d=> fill(d.index))
                       .on( "mouseover", fade( .1 ) ) //fade out unselected relationships
                       .on( "mouseout", fade( 1 ) );  //display all relationships when none selected
 
