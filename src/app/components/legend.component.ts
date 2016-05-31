@@ -8,7 +8,7 @@ import { Candidate } from '../models/candidate';
 import * as d3 from 'd3';
 import { Subject } from 'rxjs/Subject';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { mutable, mutate } from '../common/mutability';
+import { mutable } from '../common/mutability';
 
 
 type Bar = {
@@ -20,7 +20,7 @@ type Bar = {
 
 @Component( {
   selector: 'rcv-legend',
-  host: {
+  host    : {
     'layout': 'row', 'layout-align': 'space-between '
   },
   styles  : [ `
@@ -76,9 +76,9 @@ export class LegendComponent implements OnInit, AfterViewInit {
   private wid: (val: number) => number;
   private color: (id: string) => string;
 
-  @HostListener('window:resize', ['$event'])
-  private onResize($event){
-    this.screenWidth$.next( this.element.nativeElement.clientWidth)
+  @HostListener( 'window:resize', [ '$event' ] )
+  private onResize($event) {
+    this.screenWidth$.next( this.element.nativeElement.clientWidth )
   }
 
   constructor(private element: ElementRef, private renderer: Renderer) {
@@ -102,7 +102,7 @@ export class LegendComponent implements OnInit, AfterViewInit {
                 color: cand.color,
                 label: cand.name,
                 icon : cand.photo,
-                name: cand.name
+                name : cand.name
               }) ).sort( (x, y)=> y.width - x.width );
 
         }

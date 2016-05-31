@@ -9,17 +9,17 @@ import { Polls } from '../models/polls';
 import { SimComponent } from './sim.component';
 
 /**
- * "Smart component" - it's aware of the rest of the application, and  
- * 
+ * "Smart component" - it's aware of the rest of the application, and
+ *
  */
 
-@Component({
-  selector: 'rcv-sim-container',
-  directives: [ SimComponent],
-  host: {
+@Component( {
+  selector  : 'rcv-sim-container',
+  directives: [ SimComponent ],
+  host      : {
     'layout-fill': ''
   },
-  template: `
+  template  : `
     
     <sim-inner [poll]="pollSync">
     
@@ -27,14 +27,15 @@ import { SimComponent } from './sim.component';
     </sim-inner>
 
   `
-})
+} )
 export class RcvSimContainer {
   poll$: Observable<Poll>;
   pollSync: IPoll;
-  constructor(private polls: Polls){
+
+  constructor(private polls: Polls) {
     let pollId = "asdf"; //in the finished app, we'll be getting this value from the URL
-   // this.poll$ = polls.load(pollId);
-    this.pollSync = polls.loadSync('sadf');
+    // this.poll$ = polls.load(pollId);
+    this.pollSync = polls.loadSync( 'sadf' );
   }
-  
+
 }

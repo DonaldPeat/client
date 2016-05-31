@@ -31,12 +31,12 @@ export class PieComponent implements OnInit, AfterViewInit {
   private g: any;
   private screenWidth$: Subject<number> = BehaviorSubject.create();
 
-  @HostListener( "window:resize")
+  @HostListener( "window:resize" )
   private onResize(event) {
     this.width = this.element.nativeElement.clientWidth;
     this.height = this.element.nativeElement.ownerDocument.body.clientHeight - 100;
 
-    this.screenWidth$.next(  this.width);
+    this.screenWidth$.next( this.width );
   }
 
 
@@ -55,10 +55,10 @@ export class PieComponent implements OnInit, AfterViewInit {
     Observable.combineLatest( this.cands$, this.screenWidth$, this.totalVotes$ ).subscribe(
         ([cands, width, totalVotes]) => {
           console.log( 'WIDTH: ' + width );
-           this.svg.attr( 'width', width ); // update the screen width - if it hasn't changed, this has no effect
-           this.g.attr( "transform", `translate(${this.width / 2 },${this.height / 2})` );
+          this.svg.attr( 'width', width ); // update the screen width - if it hasn't changed, this has no effect
+          this.g.attr( "transform", `translate(${this.width / 2 },${this.height / 2})` );
 
-           let actives       = mutable( cands ).filter( cand => cand.isActive ), // don't include eliminated candidates
+          let actives       = mutable( cands ).filter( cand => cand.isActive ), // don't include eliminated candidates
               tot           = actives.reduce( (sum, cand) => sum + cand.score, 0 ), //the total # of active votes
               allyVotes     = actives.reduce( (result, cand) => {
                 result[ cand.id ] = cand.getInboundAllyVotes();
@@ -78,7 +78,7 @@ export class PieComponent implements OnInit, AfterViewInit {
                 let i = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
                 return i > 90 ? i - 180 : i;
               };
-            
+
           //A single selection for each candidate; bind every elements to this single selection
           let candGs      = this.g.selectAll( '.cand-g' ).data( outerPie( cands ), d => d.data.id ),
               candGEnters = candGs.enter(), // elements we're drawing for the first time
@@ -97,153 +97,153 @@ export class PieComponent implements OnInit, AfterViewInit {
           enterGs.append( "path" )
                  .attr( 'class', 'arc' )
                  .attr( "d", this.arc )
-                 .attr( "fill" , d => d.data.color)
-                 .each( d => this.element.nativeElement._current = d) //stores the current angles in ._current //
-                 .on( "click", d => this.removals$.next(d.data.id) );
+                 .attr( "fill", d => d.data.color )
+                 .each( d => this.element.nativeElement._current = d ) //stores the current angles in ._current //
+                 .on( "click", d => this.removals$.next( d.data.id ) );
 
           enterGs // Jeff: we can filter here so those labels are never placed (see comment on https://github.com/RCVSim/client/commit/9d5042d72c86f0e1da9e38737d8bfdd8abf8d703#diff-1b3d57e760bc62d6198570b6b2cc9ad4R110
-                 .append( "text" )
-                 .attr( "class", "txt" )
-                 .attr( "dy", ".35em" )
-                 .attr( "text-anchor", "middle" )
-                 .attr( "transform", d => {
-                   d.outerRadius = this.radius() * 1.8;
-                   d.innerRadius = this.radius() * 0.6;
-                   return `translate(${this.arc.centroid( d )}) rotate(${angle( d )})`;
-                 } )
-                 .style( "fill", "white" )
-                 .text( d => percentFormat( d.value / tot ) )
-                 .on("click" , d => this.removals$.next(d.data.id) );
+              .append( "text" )
+              .attr( "class", "txt" )
+              .attr( "dy", ".35em" )
+              .attr( "text-anchor", "middle" )
+              .attr( "transform", d => {
+                d.outerRadius = this.radius() * 1.8;
+                d.innerRadius = this.radius() * 0.6;
+                return `translate(${this.arc.centroid( d )}) rotate(${angle( d )})`;
+              } )
+              .style( "fill", "white" )
+              .text( d => percentFormat( d.value / tot ) )
+              .on( "click", d => this.removals$.next( d.data.id ) );
           //  .each( d => this.element.nativeElement._text = d.value ); //stores the current value in ._text // <-- Jeff: Why?
-/*
-          let enterCandLabelGs = enterGs
-              .append( 'g' ).attr( 'class', 'candLabel-g' );
+          /*
+           let enterCandLabelGs = enterGs
+           .append( 'g' ).attr( 'class', 'candLabel-g' );
 
-          //black dot for candLabel
-          enterCandLabelGs.append( "circle" )
-                 .attr( "class" , "label-dot" )
-                 .attr( { x: 0, y : 0, r : 2, fill: "#000", } )
-                 .attr( "transform", d => {
-                     let c = this.arc.centroid( d );
-                     return `translate(${c[ 0 ] * 1.45},${c[ 1 ] * 1.45})`;
-                 });
+           //black dot for candLabel
+           enterCandLabelGs.append( "circle" )
+           .attr( "class" , "label-dot" )
+           .attr( { x: 0, y : 0, r : 2, fill: "#000", } )
+           .attr( "transform", d => {
+           let c = this.arc.centroid( d );
+           return `translate(${c[ 0 ] * 1.45},${c[ 1 ] * 1.45})`;
+           });
 
-            ///Draw candLabel for first time
-          enterCandLabelGs
-                 .append( "text" )
-                 .attr( "class" , "label-text" )
-                 .attr( "x", d => {
-                     let c = this.arc.centroid( d ),
-                     midAngle = Math.atan2(c[1], c[0]),
-                     x = Math.cos(midAngle) * this.radius() * 1.95,
-                     sign = x > 0 ? 1 : -1;
-                     d.x = x + 5 * sign;
-                     return x + 10 * sign;
-                 } )
-                 .attr( "y", d => {
-                   let c = this.arc.centroid( d ),
-                   midAngle = Math.atan2(c[1] , c[0]),
-                   y =  Math.sin(midAngle) * this.radius() * 2.1;
-                   d.y = Math.sin(midAngle) * this.radius() * 1.95;
-                   return y;
-                  })
-                 .attr( "text-anchor", d => {
-                     let c = this.arc.centroid( d ),
-                     midAngle = Math.atan2(c[1], c[0]),
-                     x = Math.cos(midAngle) * this.radius();
-                     return x > 0 ? "start" : "end";
-                 })
-                 .style( "fill", "black" )
-                 .text( d => d.data.name.split(" ")[1] )
-                 .on("click", d => this.removals$.next(d.data.id) );
-
-            enterCandLabelGs.append( "line" )
-                .attr( "class" , "label-line")
-                .attr( { x1: d => this.arc.centroid(d)[0] * 1.45,
-                    y1: d => this.arc.centroid(d)[1] * 1.45,
-                    x2: d => d.x - d.x * 0.035,
-                    y2: d => d.y - d.y * 0.035,
-                })
-                .attr("stroke", "black")
-                .attr("stroke-width", 1)
-                .attr("fill", "none");
-                */
-
-           //Jeff: I haven't touched the innerCircle stuff - can you refactor this the way I did the outer?
-
-           //Draws inner circle
-           let innerCircle = this.g.selectAll( '.innerCircle-g' ).data( innerPie( numVotes ) ),
-                innerCircleGEnters = innerCircle.enter(),
-                innerCircleGExits  = innerCircle.exit();
-
-           let innerCircleGs = innerCircleGEnters.append('g').attr('class','innerCircle-g');
-
-           //Draws inner arcs
-           innerCircleGs.append( "path" )
-               .attr( "class", "innerCircleArc" )
-               .attr( "d", this.innerCircleArc )
-               .attr( "fill", d => colorInner( d.data ) )
-               .each( d => this.element.nativeElement._currentAng = d );//stores current angles in ._currentAng
-
-           //Draws Inner Circle Labels
-           innerCircleGs
-                .append( "text" )
-                .attr( "class", "innerTxt" )
-                .attr( "dy", "-0.10em" )
-                .attr( "text-anchor", "middle" )
-                .attr( "transform", d => {
-                    d.outerRadius = this.radius() * 0.4;
-                    return `translate(${this.innerCircleArc.centroid( d )}) rotate(${0})`;
-                } )
-                .style( "fill", "white" )
-                .style( "font-size", "18px" )
-                .text( d => percentFormat( d.value / totalVotes ) );
-
-            let arcs        = candGs.select( '.arc' ),
-                scoreLabels = candGs.select( '.txt' ), // Jeff, you should make this name more descriptive, mayble score-label
-                candLabelDots  = candGs.select( '.label-dot' ),
-                candLabelLabels  = candGs.select( '.label-text' ),
-                candLabelLines  = candGs.select( '.label-line' ),
-                innerCircleArcs = innerCircle.select('.innerCircleArc'),
-                innerCircleLabels = innerCircle.select('.innerTxt');
-
-            //Removes a eliminated candidate from our visualization elements
-            let setAllGsOpacity = (value) => {
-                //Little Hack; filter the ones that are too small to see to opacity 0, else opacity to 1
-                arcs.filter( d => d.data.eliminated ).style("opacity",0);
-                arcs.filter( d => !d.data.eliminated ).style("opacity",value);
-                scoreLabels.filter(d => d.data.eliminated || d.endAngle - d.startAngle < .2).style("opacity", 0);
-                scoreLabels.filter(d => !d.data.eliminated && d.endAngle - d.startAngle > .2).style("opacity", value);
-                candLabelDots.filter(d => d.data.eliminated || d.endAngle - d.startAngle < .2).style("opacity", 0);
-                candLabelDots.filter(d => !d.data.eliminated && d.endAngle - d.startAngle > .2).style("opacity", value);
-                candLabelLabels.filter(d => d.data.eliminated || d.endAngle - d.startAngle < .2).style("opacity", 0);
-                candLabelLabels.filter(d => !d.data.eliminated && d.endAngle - d.startAngle > .2).style("opacity", value);
-                candLabelLines.filter(d => d.data.eliminated || d.endAngle - d.startAngle < .2).style("opacity", 0);
-                candLabelLines.filter(d => !d.data.eliminated && d.endAngle - d.startAngle > .2).style("opacity", value);
-                innerCircleLabels.filter(d => d.endAngle - d.startAngle < .2).style("opacity", 0);
-                innerCircleLabels.filter(d => d.endAngle - d.startAngle > .2).style("opacity", value);
-            };
-
-            setAllGsOpacity(1);
-
-           arcs.on("mouseover", d => {
-               let opacityValue = 0.3;
-
-               setAllGsOpacity(opacityValue);
-               innerCircleArcs.style("opacity", opacityValue);
-
-               arcs.filter( t => t.data.id == d.data.id).style("opacity",1);
-               scoreLabels.filter( t => t.data.id == d.data.id).style("opacity", 1);
-               candLabelDots.filter( t => t.data.id == d.data.id).style("opacity", 1);
-               candLabelLabels.filter( t => t.data.id == d.data.id).style("opacity", 1);
-               candLabelLines.filter( t => t.data.id == d.data.id).style("opacity", 1);
-
-               this.hoverCand$.next(d.data.id);
+           ///Draw candLabel for first time
+           enterCandLabelGs
+           .append( "text" )
+           .attr( "class" , "label-text" )
+           .attr( "x", d => {
+           let c = this.arc.centroid( d ),
+           midAngle = Math.atan2(c[1], c[0]),
+           x = Math.cos(midAngle) * this.radius() * 1.95,
+           sign = x > 0 ? 1 : -1;
+           d.x = x + 5 * sign;
+           return x + 10 * sign;
+           } )
+           .attr( "y", d => {
+           let c = this.arc.centroid( d ),
+           midAngle = Math.atan2(c[1] , c[0]),
+           y =  Math.sin(midAngle) * this.radius() * 2.1;
+           d.y = Math.sin(midAngle) * this.radius() * 1.95;
+           return y;
            })
-               .on("mouseout", () => {
-                   setAllGsOpacity(1);
-                   innerCircleArcs.style("opacity", 1);
-               });
+           .attr( "text-anchor", d => {
+           let c = this.arc.centroid( d ),
+           midAngle = Math.atan2(c[1], c[0]),
+           x = Math.cos(midAngle) * this.radius();
+           return x > 0 ? "start" : "end";
+           })
+           .style( "fill", "black" )
+           .text( d => d.data.name.split(" ")[1] )
+           .on("click", d => this.removals$.next(d.data.id) );
+
+           enterCandLabelGs.append( "line" )
+           .attr( "class" , "label-line")
+           .attr( { x1: d => this.arc.centroid(d)[0] * 1.45,
+           y1: d => this.arc.centroid(d)[1] * 1.45,
+           x2: d => d.x - d.x * 0.035,
+           y2: d => d.y - d.y * 0.035,
+           })
+           .attr("stroke", "black")
+           .attr("stroke-width", 1)
+           .attr("fill", "none");
+           */
+
+          //Jeff: I haven't touched the innerCircle stuff - can you refactor this the way I did the outer?
+
+          //Draws inner circle
+          let innerCircle        = this.g.selectAll( '.innerCircle-g' ).data( innerPie( numVotes ) ),
+              innerCircleGEnters = innerCircle.enter(),
+              innerCircleGExits  = innerCircle.exit();
+
+          let innerCircleGs = innerCircleGEnters.append( 'g' ).attr( 'class', 'innerCircle-g' );
+
+          //Draws inner arcs
+          innerCircleGs.append( "path" )
+                       .attr( "class", "innerCircleArc" )
+                       .attr( "d", this.innerCircleArc )
+                       .attr( "fill", d => colorInner( d.data ) )
+                       .each( d => this.element.nativeElement._currentAng = d );//stores current angles in ._currentAng
+
+          //Draws Inner Circle Labels
+          innerCircleGs
+              .append( "text" )
+              .attr( "class", "innerTxt" )
+              .attr( "dy", "-0.10em" )
+              .attr( "text-anchor", "middle" )
+              .attr( "transform", d => {
+                d.outerRadius = this.radius() * 0.4;
+                return `translate(${this.innerCircleArc.centroid( d )}) rotate(${0})`;
+              } )
+              .style( "fill", "white" )
+              .style( "font-size", "18px" )
+              .text( d => percentFormat( d.value / totalVotes ) );
+
+          let arcs              = candGs.select( '.arc' ),
+              scoreLabels       = candGs.select( '.txt' ), // Jeff, you should make this name more descriptive, mayble score-label
+              candLabelDots     = candGs.select( '.label-dot' ),
+              candLabelLabels   = candGs.select( '.label-text' ),
+              candLabelLines    = candGs.select( '.label-line' ),
+              innerCircleArcs   = innerCircle.select( '.innerCircleArc' ),
+              innerCircleLabels = innerCircle.select( '.innerTxt' );
+
+          //Removes a eliminated candidate from our visualization elements
+          let setAllGsOpacity = (value) => {
+            //Little Hack; filter the ones that are too small to see to opacity 0, else opacity to 1
+            arcs.filter( d => d.data.eliminated ).style( "opacity", 0 );
+            arcs.filter( d => !d.data.eliminated ).style( "opacity", value );
+            scoreLabels.filter( d => d.data.eliminated || d.endAngle - d.startAngle < .2 ).style( "opacity", 0 );
+            scoreLabels.filter( d => !d.data.eliminated && d.endAngle - d.startAngle > .2 ).style( "opacity", value );
+            candLabelDots.filter( d => d.data.eliminated || d.endAngle - d.startAngle < .2 ).style( "opacity", 0 );
+            candLabelDots.filter( d => !d.data.eliminated && d.endAngle - d.startAngle > .2 ).style( "opacity", value );
+            candLabelLabels.filter( d => d.data.eliminated || d.endAngle - d.startAngle < .2 ).style( "opacity", 0 );
+            candLabelLabels.filter( d => !d.data.eliminated && d.endAngle - d.startAngle > .2 ).style( "opacity", value );
+            candLabelLines.filter( d => d.data.eliminated || d.endAngle - d.startAngle < .2 ).style( "opacity", 0 );
+            candLabelLines.filter( d => !d.data.eliminated && d.endAngle - d.startAngle > .2 ).style( "opacity", value );
+            innerCircleLabels.filter( d => d.endAngle - d.startAngle < .2 ).style( "opacity", 0 );
+            innerCircleLabels.filter( d => d.endAngle - d.startAngle > .2 ).style( "opacity", value );
+          };
+
+          setAllGsOpacity( 1 );
+
+          arcs.on( "mouseover", d => {
+            let opacityValue = 0.3;
+
+            setAllGsOpacity( opacityValue );
+            innerCircleArcs.style( "opacity", opacityValue );
+
+            arcs.filter( t => t.data.id == d.data.id ).style( "opacity", 1 );
+            scoreLabels.filter( t => t.data.id == d.data.id ).style( "opacity", 1 );
+            candLabelDots.filter( t => t.data.id == d.data.id ).style( "opacity", 1 );
+            candLabelLabels.filter( t => t.data.id == d.data.id ).style( "opacity", 1 );
+            candLabelLines.filter( t => t.data.id == d.data.id ).style( "opacity", 1 );
+
+            this.hoverCand$.next( d.data.id );
+          } )
+              .on( "mouseout", () => {
+                setAllGsOpacity( 1 );
+                innerCircleArcs.style( "opacity", 1 );
+              } );
 
 
           //Updates the outerCircle with one less candidate
@@ -269,61 +269,62 @@ export class PieComponent implements OnInit, AfterViewInit {
           candLabelDots
               .transition().duration( 650 )
               .attr( "transform", d => {
-                  let c = this.arc.centroid( d );
-                  return `translate(${c[ 0 ] * 1.45},${c[ 1 ] * 1.45})`;
-              });
+                let c = this.arc.centroid( d );
+                return `translate(${c[ 0 ] * 1.45},${c[ 1 ] * 1.45})`;
+              } );
 
           //Updates the candidates' name with one less candidate
           candLabelLabels
               .transition().duration( 650 )
               .attr( "x", d => {
-                  let c = this.arc.centroid( d ),
-                      midAngle = Math.atan2(c[1] , c[0] ),
-                      x = Math.cos(midAngle) * this.radius() * 1.95,
-                      sign = x > 0 ? 1 : -1;
-                  d.x = x + 5 * sign;
-                  return x + 10 * sign;
+                let c        = this.arc.centroid( d ),
+                    midAngle = Math.atan2( c[ 1 ], c[ 0 ] ),
+                    x        = Math.cos( midAngle ) * this.radius() * 1.95,
+                    sign     = x > 0 ? 1 : -1;
+                d.x = x + 5 * sign;
+                return x + 10 * sign;
               } )
               .attr( "y", d => {
-                  let c = this.arc.centroid( d ),
-                      midAngle = Math.atan2(c[1] , c[0] ),
-                      y =  Math.sin(midAngle) * this.radius() * 2.10,
-                      dx = Math.pow(d.x - this.arc.centroid(d)[0] * 1.45 , 2),
-                      dy = Math.pow(y - this.arc.centroid(d)[1] * 1.45 , 2);
-                  d.y = Math.sin(midAngle) * this.radius() * 1.95;
-                  if ( Math.sqrt(dx+dy) < width*0.052 && d.endAngle - d.startAngle > .2 ) {
-                      return Math.sin(midAngle) * this.radius() * 2.5;
-                  }
-                  return y;
-              }); //Jeff, you'll never need to change the name
+                let c        = this.arc.centroid( d ),
+                    midAngle = Math.atan2( c[ 1 ], c[ 0 ] ),
+                    y        = Math.sin( midAngle ) * this.radius() * 2.10,
+                    dx       = Math.pow( d.x - this.arc.centroid( d )[ 0 ] * 1.45, 2 ),
+                    dy       = Math.pow( y - this.arc.centroid( d )[ 1 ] * 1.45, 2 );
+                d.y = Math.sin( midAngle ) * this.radius() * 1.95;
+                if (Math.sqrt( dx + dy ) < width * 0.052 && d.endAngle - d.startAngle > .2) {
+                  return Math.sin( midAngle ) * this.radius() * 2.5;
+                }
+                return y;
+              } ); //Jeff, you'll never need to change the name
 
-            //Updates the candidates' line with one less candidate
-            candLabelLines
-                .transition().duration( 650 )
-                .attr( { x1: d => this.arc.centroid(d)[0] * 1.45,
-                    y1: d => this.arc.centroid(d)[1] * 1.45,
-                    x2: d => d.x - d.x * 0.035,
-                    y2: d => d.y - d.y * 0.035,
-                });
+          //Updates the candidates' line with one less candidate
+          candLabelLines
+              .transition().duration( 650 )
+              .attr( {
+                x1: d => this.arc.centroid( d )[ 0 ] * 1.45,
+                y1: d => this.arc.centroid( d )[ 1 ] * 1.45,
+                x2: d => d.x - d.x * 0.035,
+                y2: d => d.y - d.y * 0.035,
+              } );
 
-           //Updates the inner Circle with one less candidate
-           innerCircleArcs
-               .transition().duration( 650 )
-               .attrTween( "d", d => {
-                   let interpolate = d3.interpolate( this.element.nativeElement._currentAng, d );
-                   this.element.nativeElement._currentAng = interpolate( 0 );
-                   return t => this.innerCircleArc( interpolate( t ) )
-                } );
+          //Updates the inner Circle with one less candidate
+          innerCircleArcs
+              .transition().duration( 650 )
+              .attrTween( "d", d => {
+                let interpolate = d3.interpolate( this.element.nativeElement._currentAng, d );
+                this.element.nativeElement._currentAng = interpolate( 0 );
+                return t => this.innerCircleArc( interpolate( t ) )
+              } );
 
 
-           //Updates the inner circle labels with one less candidate.
-           innerCircleLabels
-               .transition().duration( 650 )
-               .attr( "transform", d => {
-                   d.outerRadius = this.radius() * 0.6;
-                   return `translate(${this.innerCircleArc.centroid( d )}) rotate(${0})`;
-                } )
-                .text( d => percentFormat( d.value / totalVotes ) );
+          //Updates the inner circle labels with one less candidate.
+          innerCircleLabels
+              .transition().duration( 650 )
+              .attr( "transform", d => {
+                d.outerRadius = this.radius() * 0.6;
+                return `translate(${this.innerCircleArc.centroid( d )}) rotate(${0})`;
+              } )
+              .text( d => percentFormat( d.value / totalVotes ) );
 
         } );
 
@@ -342,15 +343,15 @@ export class PieComponent implements OnInit, AfterViewInit {
                  .attr( 'height', `${this.height}` );
 
     this.g = this.svg.append( 'g' )
-                 .attr( "transform", `translate(${this.width /2 },${this.height/2})` );
+                 .attr( "transform", `translate(${this.width / 2 },${this.height / 2})` );
 
     this.arc = d3.svg.arc()
                  .innerRadius( this.radius() * 0.6 )
                  .outerRadius( this.radius() * 2 );
 
     this.innerCircleArc = d3.svg.arc()
-                       .innerRadius( 0 )
-                       .outerRadius( this.radius() * 0.6 );
+                            .innerRadius( 0 )
+                            .outerRadius( this.radius() * 0.6 );
 
     this.screenWidth$.next( this.width );
   }
