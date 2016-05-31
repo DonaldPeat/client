@@ -27,6 +27,9 @@ export class PieComponent implements OnInit, AfterViewInit {
   private arc;
   private innerCircleArc;
   private radius = () => Math.min( this.width, this.height ) / 5;
+    //outer circle ratios, change these ratios to change the size of the outer and inner circle
+  private outerCirInnerRadius = 0.35;
+  private outerCirOuterRadius = 2.25;
   private svg: Selection<any>;
   private g: any;
   private screenWidth$: Subject<number> = BehaviorSubject.create();
@@ -60,16 +63,7 @@ export class PieComponent implements OnInit, AfterViewInit {
 
           let actives       = mutable( cands ).filter( cand => cand.isActive ), // don't include eliminated candidates
               tot           = actives.reduce( (sum, cand) => sum + cand.score, 0 ), //the total # of active votes
-              allyVotes     = actives.reduce( (result, cand) => {
-                result[ cand.id ] = cand.getInboundAllyVotes();
-                return result
-              }, {} ),
-              wid           = d3.scale.linear()
-                                .domain( [ 0, tot ] ) // scale from 0 to 100% of the votes
-                                .range( [ 0, width || 0 ] ), //mapped to 0 to full width of screen
               numVotes      = [ tot, totalVotes - tot ],
-              scores        = actives.map( cand => +cand.score ).sort( (x, y)=> y - x ),
-              ids           = mutable( cands ).map( cand => cand.id ).sort(), // sort alphabetically so each cand's color stays the same
               colorInner    = d3.scale.category10(),
               percentFormat = d3.format( ".0%" ),
               outerPie      = d3.layout.pie().value( d => d.isActive ? d.score : 0 ), // Jeff/donald disregard this warning - inaccuracy in the typedef
@@ -107,69 +101,13 @@ export class PieComponent implements OnInit, AfterViewInit {
               .attr( "dy", ".35em" )
               .attr( "text-anchor", "middle" )
               .attr( "transform", d => {
-                d.outerRadius = this.radius() * 1.8;
-                d.innerRadius = this.radius() * 0.6;
+                d.outerRadius = this.radius() * this.outerCirOuterRadius - this.outerCirOuterRadius * 0.2;
+                d.innerRadius = this.radius() * this.outerCirInnerRadius - this.outerCirInnerRadius * 0.2;
                 return `translate(${this.arc.centroid( d )}) rotate(${angle( d )})`;
               } )
               .style( "fill", "white" )
               .text( d => percentFormat( d.value / tot ) )
               .on( "click", d => this.removals$.next( d.data.id ) );
-          //  .each( d => this.element.nativeElement._text = d.value ); //stores the current value in ._text // <-- Jeff: Why?
-          /*
-           let enterCandLabelGs = enterGs
-           .append( 'g' ).attr( 'class', 'candLabel-g' );
-
-           //black dot for candLabel
-           enterCandLabelGs.append( "circle" )
-           .attr( "class" , "label-dot" )
-           .attr( { x: 0, y : 0, r : 2, fill: "#000", } )
-           .attr( "transform", d => {
-           let c = this.arc.centroid( d );
-           return `translate(${c[ 0 ] * 1.45},${c[ 1 ] * 1.45})`;
-           });
-
-           ///Draw candLabel for first time
-           enterCandLabelGs
-           .append( "text" )
-           .attr( "class" , "label-text" )
-           .attr( "x", d => {
-           let c = this.arc.centroid( d ),
-           midAngle = Math.atan2(c[1], c[0]),
-           x = Math.cos(midAngle) * this.radius() * 1.95,
-           sign = x > 0 ? 1 : -1;
-           d.x = x + 5 * sign;
-           return x + 10 * sign;
-           } )
-           .attr( "y", d => {
-           let c = this.arc.centroid( d ),
-           midAngle = Math.atan2(c[1] , c[0]),
-           y =  Math.sin(midAngle) * this.radius() * 2.1;
-           d.y = Math.sin(midAngle) * this.radius() * 1.95;
-           return y;
-           })
-           .attr( "text-anchor", d => {
-           let c = this.arc.centroid( d ),
-           midAngle = Math.atan2(c[1], c[0]),
-           x = Math.cos(midAngle) * this.radius();
-           return x > 0 ? "start" : "end";
-           })
-           .style( "fill", "black" )
-           .text( d => d.data.name.split(" ")[1] )
-           .on("click", d => this.removals$.next(d.data.id) );
-
-           enterCandLabelGs.append( "line" )
-           .attr( "class" , "label-line")
-           .attr( { x1: d => this.arc.centroid(d)[0] * 1.45,
-           y1: d => this.arc.centroid(d)[1] * 1.45,
-           x2: d => d.x - d.x * 0.035,
-           y2: d => d.y - d.y * 0.035,
-           })
-           .attr("stroke", "black")
-           .attr("stroke-width", 1)
-           .attr("fill", "none");
-           */
-
-          //Jeff: I haven't touched the innerCircle stuff - can you refactor this the way I did the outer?
 
           //Draws inner circle
           let innerCircle        = this.g.selectAll( '.innerCircle-g' ).data( innerPie( numVotes ) ),
@@ -183,7 +121,7 @@ export class PieComponent implements OnInit, AfterViewInit {
                        .attr( "class", "innerCircleArc" )
                        .attr( "d", this.innerCircleArc )
                        .attr( "fill", d => colorInner( d.data ) )
-                       .each( d => this.element.nativeElement._currentAng = d );//stores current angles in ._currentAng
+                       .each( d => this.element.nativeElement._currentAng = d );//stores current angles as ._currentAng
 
           //Draws Inner Circle Labels
           innerCircleGs
@@ -192,7 +130,7 @@ export class PieComponent implements OnInit, AfterViewInit {
               .attr( "dy", "-0.10em" )
               .attr( "text-anchor", "middle" )
               .attr( "transform", d => {
-                d.outerRadius = this.radius() * 0.4;
+                d.outerRadius = this.radius() * this.outerCirInnerRadius;
                 return `translate(${this.innerCircleArc.centroid( d )}) rotate(${0})`;
               } )
               .style( "fill", "white" )
@@ -200,51 +138,34 @@ export class PieComponent implements OnInit, AfterViewInit {
               .text( d => percentFormat( d.value / totalVotes ) );
 
           let arcs              = candGs.select( '.arc' ),
-              scoreLabels       = candGs.select( '.txt' ), // Jeff, you should make this name more descriptive, mayble score-label
-              candLabelDots     = candGs.select( '.label-dot' ),
-              candLabelLabels   = candGs.select( '.label-text' ),
-              candLabelLines    = candGs.select( '.label-line' ),
+              scoreLabels       = candGs.select( '.txt' ),
               innerCircleArcs   = innerCircle.select( '.innerCircleArc' ),
               innerCircleLabels = innerCircle.select( '.innerTxt' );
 
           //Removes a eliminated candidate from our visualization elements
           let setAllGsOpacity = (value) => {
-            //Little Hack; filter the ones that are too small to see to opacity 0, else opacity to 1
-            arcs.filter( d => d.data.eliminated ).style( "opacity", 0 );
+            //Little Hack; filter the ones that are too small to see to opacity 0, else their opacity is the value
             arcs.filter( d => !d.data.eliminated ).style( "opacity", value );
             scoreLabels.filter( d => d.data.eliminated || d.endAngle - d.startAngle < .2 ).style( "opacity", 0 );
             scoreLabels.filter( d => !d.data.eliminated && d.endAngle - d.startAngle > .2 ).style( "opacity", value );
-            candLabelDots.filter( d => d.data.eliminated || d.endAngle - d.startAngle < .2 ).style( "opacity", 0 );
-            candLabelDots.filter( d => !d.data.eliminated && d.endAngle - d.startAngle > .2 ).style( "opacity", value );
-            candLabelLabels.filter( d => d.data.eliminated || d.endAngle - d.startAngle < .2 ).style( "opacity", 0 );
-            candLabelLabels.filter( d => !d.data.eliminated && d.endAngle - d.startAngle > .2 ).style( "opacity", value );
-            candLabelLines.filter( d => d.data.eliminated || d.endAngle - d.startAngle < .2 ).style( "opacity", 0 );
-            candLabelLines.filter( d => !d.data.eliminated && d.endAngle - d.startAngle > .2 ).style( "opacity", value );
-            innerCircleLabels.filter( d => d.endAngle - d.startAngle < .2 ).style( "opacity", 0 );
-            innerCircleLabels.filter( d => d.endAngle - d.startAngle > .2 ).style( "opacity", value );
+            innerCircleArcs.style( "opacity", value );
           };
 
-          setAllGsOpacity( 1 );
+          setAllGsOpacity( 1 ); // set visible elements' opacity to 1
 
           arcs.on( "mouseover", d => {
             let opacityValue = 0.3;
 
-            setAllGsOpacity( opacityValue );
-            innerCircleArcs.style( "opacity", opacityValue );
+            setAllGsOpacity( opacityValue ); // set every visible elements' opacity to this opacityValue
 
-            arcs.filter( t => t.data.id == d.data.id ).style( "opacity", 1 );
-            scoreLabels.filter( t => t.data.id == d.data.id ).style( "opacity", 1 );
-            candLabelDots.filter( t => t.data.id == d.data.id ).style( "opacity", 1 );
-            candLabelLabels.filter( t => t.data.id == d.data.id ).style( "opacity", 1 );
-            candLabelLines.filter( t => t.data.id == d.data.id ).style( "opacity", 1 );
+            arcs.filter( t => t.data.id == d.data.id ).style( "opacity", 1 ); //set this arc's opacity to 1
+            scoreLabels.filter( t => t.data.id == d.data.id ).style( "opacity", 1 ); //set this scoreLabel's opacity to 1
 
-            this.hoverCand$.next( d.data.id );
+            this.hoverCand$.next( d.data.id ); //Send a string to hoverCand$ stream
           } )
               .on( "mouseout", () => {
-                setAllGsOpacity( 1 );
-                innerCircleArcs.style( "opacity", 1 );
+                setAllGsOpacity( 1 ); //normalize every visible elements' opacity
               } );
-
 
           //Updates the outerCircle with one less candidate
           arcs
@@ -259,56 +180,25 @@ export class PieComponent implements OnInit, AfterViewInit {
           scoreLabels
               .transition().duration( 650 )
               .attr( "transform", d => {
-                d.outerRadius = this.radius() * 1.8;
-                d.innerRadius = this.radius() * 0.6;
+                d.outerRadius = this.radius() * this.outerCirOuterRadius - this.outerCirOuterRadius * 0.2;
+                d.innerRadius = this.radius() * this.outerCirInnerRadius - this.outerCirInnerRadius * 0.2;
                 return `translate(${this.arc.centroid( d )}) rotate(${angle( d )})`;
               } )
               .text( d => percentFormat( d.value / tot ) );
 
-          //Updates the candidates' dot with one less candidate
-          candLabelDots
-              .transition().duration( 650 )
-              .attr( "transform", d => {
-                let c = this.arc.centroid( d );
-                return `translate(${c[ 0 ] * 1.45},${c[ 1 ] * 1.45})`;
-              } );
-
-          //Updates the candidates' name with one less candidate
-          candLabelLabels
-              .transition().duration( 650 )
-              .attr( "x", d => {
-                let c        = this.arc.centroid( d ),
-                    midAngle = Math.atan2( c[ 1 ], c[ 0 ] ),
-                    x        = Math.cos( midAngle ) * this.radius() * 1.95,
-                    sign     = x > 0 ? 1 : -1;
-                d.x = x + 5 * sign;
-                return x + 10 * sign;
-              } )
-              .attr( "y", d => {
-                let c        = this.arc.centroid( d ),
-                    midAngle = Math.atan2( c[ 1 ], c[ 0 ] ),
-                    y        = Math.sin( midAngle ) * this.radius() * 2.10,
-                    dx       = Math.pow( d.x - this.arc.centroid( d )[ 0 ] * 1.45, 2 ),
-                    dy       = Math.pow( y - this.arc.centroid( d )[ 1 ] * 1.45, 2 );
-                d.y = Math.sin( midAngle ) * this.radius() * 1.95;
-                if (Math.sqrt( dx + dy ) < width * 0.052 && d.endAngle - d.startAngle > .2) {
-                  return Math.sin( midAngle ) * this.radius() * 2.5;
-                }
-                return y;
-              } ); //Jeff, you'll never need to change the name
-
-          //Updates the candidates' line with one less candidate
-          candLabelLines
-              .transition().duration( 650 )
-              .attr( {
-                x1: d => this.arc.centroid( d )[ 0 ] * 1.45,
-                y1: d => this.arc.centroid( d )[ 1 ] * 1.45,
-                x2: d => d.x - d.x * 0.035,
-                y2: d => d.y - d.y * 0.035,
-              } );
-
           //Updates the inner Circle with one less candidate
           innerCircleArcs
+              .on( "mouseover", d => {
+                  innerCircleLabels.filter( d => d.endAngle - d.startAngle > .2 )
+                      .transition()
+                      .duration(350)
+                      .style( "opacity", 1);
+              })
+              .on ( "mouseout", d => {
+                  innerCircleLabels.transition()
+                      .duration(650)
+                      .style( "opacity", 0);
+              })
               .transition().duration( 650 )
               .attrTween( "d", d => {
                 let interpolate = d3.interpolate( this.element.nativeElement._currentAng, d );
@@ -316,12 +206,22 @@ export class PieComponent implements OnInit, AfterViewInit {
                 return t => this.innerCircleArc( interpolate( t ) )
               } );
 
-
           //Updates the inner circle labels with one less candidate.
           innerCircleLabels
-              .transition().duration( 650 )
+              .style( "opacity", 0)
+              .on( "mouseover", d => {
+                  innerCircleLabels.filter( d => d.endAngle - d.startAngle > .2 )
+                      .transition()
+                      .duration(350)
+                      .style( "opacity", 1);
+              })
+              .on ( "mouseout", d => {
+                  innerCircleLabels.transition()
+                      .duration(650)
+                      .style( "opacity", 0);
+              })
               .attr( "transform", d => {
-                d.outerRadius = this.radius() * 0.6;
+                d.outerRadius = this.radius() * this.outerCirInnerRadius;
                 return `translate(${this.innerCircleArc.centroid( d )}) rotate(${0})`;
               } )
               .text( d => percentFormat( d.value / totalVotes ) );
@@ -346,12 +246,12 @@ export class PieComponent implements OnInit, AfterViewInit {
                  .attr( "transform", `translate(${this.width / 2 },${this.height / 2})` );
 
     this.arc = d3.svg.arc()
-                 .innerRadius( this.radius() * 0.6 )
-                 .outerRadius( this.radius() * 2 );
+                 .innerRadius( this.radius() * this.outerCirInnerRadius )
+                 .outerRadius( this.radius() * this.outerCirOuterRadius );
 
     this.innerCircleArc = d3.svg.arc()
                             .innerRadius( 0 )
-                            .outerRadius( this.radius() * 0.6 );
+                            .outerRadius( this.radius() * this.outerCirInnerRadius );
 
     this.screenWidth$.next( this.width );
   }
