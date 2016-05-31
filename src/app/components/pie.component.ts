@@ -193,7 +193,7 @@ export class PieComponent implements OnInit, AfterViewInit {
                 .attr( "dy", "-0.10em" )
                 .attr( "text-anchor", "middle" )
                 .attr( "transform", d => {
-                    d.outerRadius = this.radius() * 0.6;
+                    d.outerRadius = this.radius() * 0.4;
                     return `translate(${this.innerCircleArc.centroid( d )}) rotate(${0})`;
                 } )
                 .style( "fill", "white" )
@@ -347,7 +347,7 @@ export class PieComponent implements OnInit, AfterViewInit {
 
     this.arc = d3.svg.arc()
                  .innerRadius( this.radius() * 0.6 )
-                 .outerRadius( this.radius() * 1.8 );
+                 .outerRadius( this.radius() * 2 );
 
     this.innerCircleArc = d3.svg.arc()
                        .innerRadius( 0 )

@@ -65,8 +65,8 @@ export class ChordComponent implements OnInit, AfterViewInit {
                 return resultArr
               }, initMatrix ),
 
-              innerRadius = Math.min( this.width, this.height ) * .337,  //outer arc blocks for labels & mouse selection
-              outerRadius = innerRadius * 1.1,
+              innerRadius = Math.min( this.width, this.height ) * .42,  //outer arc blocks for labels & mouse selection
+              outerRadius = innerRadius * 1.07,
               fill        = d3.scale.category20b().domain( ids ),
 
               fade        = (opacity)=> {
@@ -97,7 +97,7 @@ export class ChordComponent implements OnInit, AfterViewInit {
                       .on( "mouseover", fade( .1 ) ) //fade out unselected relationships
                       .on( "mouseout", fade( 1 ) );  //display all relationships when none selected
 
-           exitingArcs.remove();
+          exitingArcs.remove();
           //applied for all arcs
           arcs.attr( "d", d3.svg.arc().innerRadius( innerRadius ).outerRadius( outerRadius ) );
 
@@ -106,27 +106,25 @@ export class ChordComponent implements OnInit, AfterViewInit {
               enteringChords = chords.enter(),
               exitingChords  = chords.exit();
 
-           // chords.remove();
+          // chords.remove();
 
+          // You were close here donald, remind me to explain why this needed to change
           let chords = enteringChords
-                        .append('g')
-                        .attr('class', 'chord')
-                        .selectAll("path")
-                        .data(chord.chords)
-                        .enter().append("path")
-                        .attr("d", d3.svg.chord().radius(innerRadius))
-                        .style("fill", function(d) { return fill(d.target.index); })
-                        .style("opacity", 1);
+              .append( "path" )
+              .attr( 'class', 'chord' )
+              .attr( "d", d3.svg.chord().radius( innerRadius ) )
+              .style( "fill", function (d) { return fill( d.target.index ); } )
+              .style( "opacity", 1 );
 
-          chords.filter(d => d.source.index == d.target.index)
-                .style('opacity', 0);
+          chords.filter( d => d.source.index == d.target.index )
+                .style( 'opacity', 0 );
 
 
-           exitingChords.remove();
+          exitingChords.remove();
 
 
           // todo:clear svg before updating data
-            // todo:adjust shading & color scheme to match pie
+          // todo:adjust shading & color scheme to match pie
 
 
         } )
