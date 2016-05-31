@@ -19,6 +19,10 @@ export class Polls {
     return Observable.of(DUMMY_DATA)
                      .map(json => Poll.mutable(<IPoll>json));
   }
+  
+  public loadSync(id: string): IPoll {
+    return <IPoll> DUMMY_DATA
+  }
 
 }
 

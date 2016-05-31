@@ -14,7 +14,7 @@ import { Selection } from 'd3';
 @Directive( {
   selector: 'chord'
 } )
-export class ChordDiagramComponent implements OnInit, AfterViewInit {
+export class ChordComponent implements OnInit, AfterViewInit {
 
   @Input() cands$: Observable<Candidate[]>;
   @Input() totalVotes$: Observable<number>;

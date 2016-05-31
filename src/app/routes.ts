@@ -1,6 +1,5 @@
 import { Routes } from '@ngrx/router';
-import { VoteInputContainer } from './vote/vote.container';
-import { RcvSimContainer } from './results/sim.container';
+import { RcvSimContainer } from './components/sim.container';
 
 
 export const ROUTES: Routes = [

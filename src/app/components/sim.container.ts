@@ -3,10 +3,10 @@
  */
 
 import { Component } from '@angular/core';
-import { Poll } from '../models/poll';
+import { Poll, IPoll } from '../models/poll';
 import { Observable } from 'rxjs/Observable';
 import { Polls } from '../models/polls';
-import { ResultsDumbComponent } from './results.component';
+import { SimComponent } from './sim.component';
 
 /**
  * "Smart component" - it's aware of the rest of the application, and  
@@ -14,28 +14,27 @@ import { ResultsDumbComponent } from './results.component';
  */
 
 @Component({
-  selector: 'results',
-  directives: [ ResultsDumbComponent],
+  selector: 'rcv-sim-container',
+  directives: [ SimComponent],
   host: {
     'layout-fill': ''
   },
   template: `
     
-    <results-inner [poll]="poll$ | async">
+    <sim-inner [poll]="pollSync">
     
       
-    </results-inner>
+    </sim-inner>
 
   `
 })
-export class ResultsContainer {
+export class RcvSimContainer {
   poll$: Observable<Poll>;
+  pollSync: IPoll;
   constructor(private polls: Polls){
     let pollId = "asdf"; //in the finished app, we'll be getting this value from the URL
-    this.poll$ = polls.load(pollId);
-    
-    
-
+   // this.poll$ = polls.load(pollId);
+    this.pollSync = polls.loadSync('sadf');
   }
   
 }

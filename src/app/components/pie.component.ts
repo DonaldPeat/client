@@ -14,7 +14,7 @@ import { mutable } from '../common/mutability';
 @Directive( {
   selector: 'pie-sunburst'
 } )
-export class PieSunBurstComponent implements OnInit, AfterViewInit {
+export class PieComponent implements OnInit, AfterViewInit {
 
   @Input() cands$: Observable<Candidate[]>;
   @Input() totalVotes$: Observable<number>;

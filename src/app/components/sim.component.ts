@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, AfterViewInit } from '@angular/core';
 import 'rxjs/Rx';
-import { Poll } from '../models/poll';
+import { Poll, IPoll } from '../models/poll';
 import { Candidate } from '../models/candidate';
 import { Vote } from '../models/vote';
 import * as _ from 'lodash';
@@ -8,19 +8,18 @@ import { Subject } from 'rxjs/Subject';
 import { BehaviorSubject } from 'rxjs/Rx';
 import { Observable } from 'rxjs/Observable';
 import { mutate, mutateAll } from '../common/mutability';
-import { CandidateBarComponent } from './candidate.bar';
-import { PieBarComponent } from './pie.bar.alt';
-import {PieSunBurstComponent} from "./pie.sunburst";
-import {ChordDiagramComponent} from "./chord";
-
+import { CandidateBarComponent } from '../results/candidate.bar';
+import { PieBarComponent } from '../results/pie.bar.alt';
+import {PieComponent} from "./pie";
+import {ChordComponent} from "./chord";
 
 /**
 
  */
 
 @Component({
-  selector: 'results-inner',
-  directives: [CandidateBarComponent, PieSunBurstComponent, ChordDiagramComponent],
+  selector: 'sim-inner',
+  directives: [ CandidateBarComponent, PieComponent, ChordComponent],
   styles: [
       `.control-bar{
             align-self: center;
@@ -50,8 +49,8 @@ import {ChordDiagramComponent} from "./chord";
     </div>
   `
 })
-export class ResultsDumbComponent implements OnInit, AfterViewInit {
-  @Input() poll: Poll;
+export class SimComponent implements OnInit, AfterViewInit {
+  @Input() poll: IPoll;
 
   private round$: Observable<number>;
   private cands$: Observable<Candidate[]>;
@@ -192,6 +191,7 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
          round$.subscribe(x => console.info(`ROUND ${x}`));
          cands$.subscribe(x => {console.info('CANDS'); console.info(x);}); */
   }
+  
 
   ngAfterViewInit(){
     /**
@@ -199,6 +199,13 @@ export class ResultsDumbComponent implements OnInit, AfterViewInit {
      */
     this.roundClicks$.next(1);
   }
+  
+  
+  
+  
+  
+  
+  
 
   private findLoser(alreadyEliminated: string[]){
     let isEliminated = (id: string) => _.includes((alreadyEliminated || []), id),

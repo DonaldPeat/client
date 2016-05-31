@@ -5,7 +5,7 @@ import {TestComponentBuilder} from "@angular/compiler/testing"
 import {Component} from "@angular/core";
 import {getDOM} from "@angular/platform-browser/src/dom/dom_adapter";
 import {provideStore} from "@ngrx/store";
-import { ResultsDumbComponent } from './results.component';
+import { SimComponent } from './sim.component';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
 import { Poll } from '../models/poll';
@@ -26,10 +26,10 @@ describe( 'ResultsComponent', ()=> {
              /**
               * element is actual root element in the compiled HTML for our component
               */
-             let element                          = root.debugElement.children[ 0 ].nativeElement,
+             let element                  = root.debugElement.children[ 0 ].nativeElement,
                  /* resultsCmp is a reference to the component itself - we can use that to test that its state (variable values, etc)
                   * is what we expect it to be after different things happen */
-                 resultsCmp: ResultsDumbComponent = <ResultsDumbComponent>root.debugElement.children[ 0 ].componentInstance;
+                 resultsCmp: SimComponent = <SimComponent>root.debugElement.children[ 0 ].componentInstance;
 
              let DOM  = getDOM(), // DOM is a "simulated" DOM
                  prev = DOM.querySelectorAll( element, '#prev' ), // query the element for element's with id prev
@@ -71,7 +71,7 @@ describe( 'ResultsComponent', ()=> {
 @Component({
              selector  : 'test',
              template  : `<results-inner [poll]="dummyPoll$ | async"></results-inner>`,
-             directives: [ ResultsDumbComponent ]
+             directives: [ SimComponent ]
            })
 class TestCmpWrapper {
   private dummyPoll$: Observable<Poll> = Observable.of(mockPoll);
