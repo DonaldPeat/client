@@ -12,6 +12,7 @@ import { CandidateBarComponent } from '../results/candidate.bar';
 import { PieBarComponent } from '../results/pie.bar.alt';
 import {PieComponent} from "./pie.component";
 import {ChordComponent} from "./chord.component";
+import { LegendComponent } from './legend.component';
 
 /**
 
@@ -19,7 +20,7 @@ import {ChordComponent} from "./chord.component";
 
 @Component({
   selector: 'sim-inner',
-  directives: [ CandidateBarComponent, PieComponent, ChordComponent],
+  directives: [ LegendComponent, PieComponent, ChordComponent],
   styles: [
       `.control-bar{
             align-self: center;
@@ -28,7 +29,8 @@ import {ChordComponent} from "./chord.component";
   ],
   template: `
      <div layout="column" layout-align="start stretch" class="results-wrapper" layout-fill>
-        <div layout="row" class="control-bar">
+        <rcv-legend [cands$]="cands$"></rcv-legend>
+           <div layout="row" class="control-bar">
           <button md-button (click)="progressToStart();">From Start</button>
           <button md-button  (click)="roundClicks$.next(-1);" [disabled]="!(isStart$ | async)" id="next" #prev>Previous Round</button>
           <div><strong>{{round$ | async}}</strong></div>
