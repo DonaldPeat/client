@@ -116,6 +116,7 @@ export class PieComponent implements OnInit, AfterViewInit {
                  .text( d => percentFormat( d.value / tot ) )
                  .on("click" , d => this.removals$.next(d.data.id) );
           //  .each( d => this.element.nativeElement._text = d.value ); //stores the current value in ._text // <-- Jeff: Why?
+/*
           let enterCandLabelGs = enterGs
               .append( 'g' ).attr( 'class', 'candLabel-g' );
 
@@ -167,6 +168,7 @@ export class PieComponent implements OnInit, AfterViewInit {
                 .attr("stroke", "black")
                 .attr("stroke-width", 1)
                 .attr("fill", "none");
+                */
 
            //Jeff: I haven't touched the innerCircle stuff - can you refactor this the way I did the outer?
 
