@@ -21,7 +21,7 @@ type Bar = {
 @Component( {
   selector: 'rcv-legend',
   host    : {
-    'layout': 'row', 'layout-align': 'space-between '
+    'layout': 'column'
   },
   styles  : [ `
     :host { 
@@ -37,9 +37,12 @@ type Bar = {
       height: 20px;
       transition: 500ms linear all;
       overflow: hidden;
-      width: 100%;
-      min-width: 100%;
     }
+    
+    .entry .bar {
+        width: 100%;    
+    }
+    
     .cand-name{ 
         overflow: visible;
         margin: 5px 0;
@@ -59,11 +62,16 @@ type Bar = {
     
   ` ],
   template: `
-    <div *ngFor="let bar of bars$ | async" class="entry" layout="column" layout-align="start center" 
-        [style.width.px]="bar.width" [style.max-width.px]="bar.width" [class.invisible]="bar.width < 150" [class.small]="bar.width < 200">
-         <div class="cand-name" >{{bar.name}}</div>
-          <div [style.background-color]="bar.color" class="bar"></div>
-    </div>
+      <div layout="row" layout-align="space-between center">
+        <div *ngFor="let bar of bars$ | async" class="entry" layout="column" layout-align="start center" flex>
+            <div [style.background-color]="bar.color" class="bar"></div>
+          <div class="cand-name">{{bar.name}}</div>
+        </div>
+      </div>
+      <div layout="row"  layout-align="space-between center">
+        <div *ngFor="let bar of bars$ | async" 
+        [style.width.px]="bar.width" [style.max-width.px]="bar.width" [style.background-color]="bar.color" class="bar"></div>
+      </div>
   `
 } )
 export class LegendComponent implements OnInit, AfterViewInit {
@@ -102,7 +110,7 @@ export class LegendComponent implements OnInit, AfterViewInit {
                 color: cand.color,
                 label: cand.name,
                 icon : cand.photo,
-                name : cand.name
+                name : cand.name.split(' ')[1]
               }) ).sort( (x, y)=> y.width - x.width );
 
         }
