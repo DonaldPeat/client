@@ -108,7 +108,8 @@ export class ChordComponent implements OnInit, AfterViewInit {
 
            // chords.remove();
 
-          enteringChords.append('g')
+          let chords = enteringChords
+                        .append('g')
                         .attr('class', 'chord')
                         .selectAll("path")
                         .data(chord.chords)
@@ -116,6 +117,9 @@ export class ChordComponent implements OnInit, AfterViewInit {
                         .attr("d", d3.svg.chord().radius(innerRadius))
                         .style("fill", function(d) { return fill(d.target.index); })
                         .style("opacity", 1);
+
+          chords.filter(d => d.source.index == d.target.index)
+                .style('opacity', 0);
 
 
            exitingChords.remove();
