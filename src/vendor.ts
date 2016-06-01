@@ -1,7 +1,6 @@
 // This file is to bundle all dependencies into a single file apart from the actual app, using webpack
 
 
-
 //angular
 import '@angular/core';
 import '@angular/common';
@@ -15,9 +14,11 @@ import '@angular/platform-browser-dynamic';
 import 'rxjs/Rx';
 
 //ngrx
+import '@ngrx/core';
 import '@ngrx/store';
-import '@ngrx/devtools';
+import '@ngrx/effects';
 import '@ngrx/router';
+import 'ngrx-store-logger';
 
 //material2
 import { MdButton, MdAnchor } from '@angular2-material/button';
