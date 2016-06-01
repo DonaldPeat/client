@@ -3,15 +3,23 @@ import { Component, Input, Output, EventEmitter, OnChanges, ChangeDetectionStrat
 @Component( {
   selector       : 'rcv-controls',
   directives     : [],
-  styles         : [ `` ],
+  styles         : [ `
+md-icon {
+    font-size: 40px;
+} 
+
+.next { color: green }
+.prev { color: red; transform: rotate(180deg)}
+
+` ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template       : `
     <div layout="row" class="control-bar">
-          <button md-button (click)="start.emit();">From Start</button>
-          <button md-button  (click)="prev.emit();"  id="next">Previous Round</button>
+          <button md-button (click)="start.emit();"><md-icon>skip_previous</md-icon></button>
+          <button md-button  (click)="prev.emit();" class="prev"><md-icon>play_arrow</md-icon></button>
           <div><strong>{{round}}</strong></div>
-          <button md-button (click)="next.emit();"  id="prev">Next Round</button>
-          <button md-button (click)="end.emit();">End Result</button>
+          <button md-button (click)="next.emit();"  class="next"><md-icon>play_arrow</md-icon></button>
+          <button md-button (click)="end.emit();"><md-icon>skip_next</md-icon></button>
         </div>
     `
 } )
