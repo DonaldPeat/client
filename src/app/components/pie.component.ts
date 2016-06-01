@@ -63,12 +63,12 @@ export class PieComponent implements OnInit, AfterViewInit {
           this.svg.attr( 'width', width ); // update the screen width - if it hasn't changed, this has no effect
           this.g.attr( "transform", `translate(${this.width / 2 },${this.height / 2})` );
 
-          let actives       = mutable( cands ).filter( cand => cand.isActive ), // don't include eliminated candidates
+          let actives       = mutable( cands ).filter( cand => !(cand.eliminated || cand.removed) ), // don't include eliminated candidates
               tot           = actives.reduce( (sum, cand) => sum + cand.score, 0 ), //the total # of active votes
               numVotes      = [ tot, totalVotes - tot ],
               colorInner    = d3.scale.category10(),
               percentFormat = d3.format( ".0%" ),
-              outerPie      = d3.layout.pie().value( d => d.isActive ? d.score : 0 ), // Jeff/donald disregard this warning - inaccuracy in the typedef
+              outerPie      = d3.layout.pie().value( d => !(d.eliminated || d.removed) ? d.score : 0 ), // Jeff/donald disregard this warning - inaccuracy in the typedef
               innerPie      = d3.layout.pie(),
               angle         = (d) => {
                 let i = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;

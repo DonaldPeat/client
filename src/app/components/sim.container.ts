@@ -1,41 +1,34 @@
-/**
- * Created by moore on 4/27/2016.
- */
-
-import { Component } from '@angular/core';
-import { Poll, IPoll } from '../models/poll';
-import { Observable } from 'rxjs/Observable';
-import { Polls } from '../models/polls';
-import { SimComponent } from './sim.component';
-
-/**
- * "Smart component" - it's aware of the rest of the application, and
- *
- */
+import { Component, Input } from '@angular/core';
+import { Simulation } from '../services/sim.service';
+import { LegendComponent } from './legend.component';
+import { ControlsComponent } from './controls.component';
+import { PieComponent } from './pie.component';
+import { ChordComponent } from './chord.component';
 
 @Component( {
   selector  : 'rcv-sim-container',
-  directives: [ SimComponent ],
-  host      : {
-    'layout-fill': ''
-  },
+  directives: [ LegendComponent, ControlsComponent, PieComponent, ChordComponent ],
+  providers : [ Simulation ],
+  styles    : [ `` ],
   template  : `
-    
-    <sim-inner [poll]="pollSync">
-    
-      
-    </sim-inner>
-
-  `
+      <rcv-legend [cands$]="sim.candidates$"></rcv-legend>
+      <rcv-controls (next)="sim.nextRound()" (prev)="sim.prevRound()" [round]="sim.round$ | async"></rcv-controls>
+      <div layout="row" layout-align="space-around stretch">
+        <rcv-pie [cands$]="sim.candidates$" [totalVotes$]="sim.totalVotes$" (removals$)="removals$.next($event)" flex></rcv-pie>
+        <rcv-chord [cands$]="sim.candidates$" [totalVotes$]="sim.totalVotes$" flex></rcv-chord>
+      </div>
+    `
 } )
-export class RcvSimContainer {
-  poll$: Observable<Poll>;
-  pollSync: IPoll;
+export class RcvSimulatorContainer {
+  @Input() id: string;
 
-  constructor(private polls: Polls) {
-    let pollId = "asdf"; //in the finished app, we'll be getting this value from the URL
-    // this.poll$ = polls.load(pollId);
-    this.pollSync = polls.loadSync( 'sadf' );
+  constructor(private sim: Simulation) {
+
+  }
+
+  ngOnInit() {
+    this.sim.load( 'asdf' );
+
   }
 
 }
