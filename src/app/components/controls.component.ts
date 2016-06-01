@@ -1,12 +1,11 @@
 import { Component, Input, Output, EventEmitter, OnChanges, ChangeDetectionStrategy } from '@angular/core';
-import { Observable } from 'rxjs/Rx';
 
 @Component( {
-  selector  : 'rcv-controls',
-  directives: [  ],
-  styles    : [ `` ],
+  selector       : 'rcv-controls',
+  directives     : [],
+  styles         : [ `` ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template  : `
+  template       : `
     <div layout="row" class="control-bar">
           <button md-button (click)="start.emit();">From Start</button>
           <button md-button  (click)="prev.emit();"  id="next">Previous Round</button>
@@ -16,14 +15,14 @@ import { Observable } from 'rxjs/Rx';
         </div>
     `
 } )
-export class ControlsComponent implements OnChanges{
+export class ControlsComponent implements OnChanges {
   @Input() round: number;
   @Output() next = new EventEmitter();
   @Output() prev = new EventEmitter();
   @Output() start = new EventEmitter();
   @Output() end = new EventEmitter();
 
-  ngOnChanges(){
+  ngOnChanges() {
     console.log( 'change' );
   }
 

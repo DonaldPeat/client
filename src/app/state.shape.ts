@@ -1,16 +1,9 @@
+import { PollData } from './models/poll';
 
-
-import { Vote } from './models/vote';
-import { Candidate } from './models/candidate';
 export interface SimulationState {
 
   round: number,
-  eliminated: string[];
-  removed: string[];    
-  
-  candidates: {
-    [id: string]: Candidate
-  }
-
+  removed: string[];
+  poll: PollData;
 
 }

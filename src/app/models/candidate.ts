@@ -1,21 +1,19 @@
-import * as _ from 'lodash';
-import * as SI from 'seamless-immutable';
 import { Vote } from './vote';
 import * as d3 from 'd3';
-import { mutable } from '../common/mutability';
+import { mutable } from './mutability';
 
-      /**
+/**
  *
  *
  **/
 
-export interface CandidateData { 
+export interface CandidateData {
   id: string;
   name: string;
   photo: string;
 }
 
-export interface Candidate extends CandidateData{
+export interface Candidate extends CandidateData {
   score: number;
   eliminated: boolean;
   removed: boolean;
@@ -35,30 +33,30 @@ export function allyVotes(candidate: Candidate): {[id: string]: number} {
   }, init );
 }
 
-export function candidate(data: CandidateData): Candidate { 
-  return { 
-    id: data.id,
-    name: data.name,
-    photo: data.photo,
-    score: 0,
+export function candidate(data: CandidateData): Candidate {
+  return {
+    id        : data.id,
+    name      : data.name,
+    photo     : data.photo,
+    score     : 0,
     eliminated: false,
-    removed: false,
-    votes: [],
-    color: ''
+    removed   : false,
+    votes     : [],
+    color     : ''
   }
 }
 
 export function candidates(input: CandidateData[]): Candidate[] {
-  const color = d3.scale.category20b().domain( mutable(input.map( cand => cand.id )).sort() );
+  const color = d3.scale.category20b().domain( mutable( input.map( cand => cand.id ) ).sort() );
 
-        return input.map(data => ({
-          id        : data.id,
-          name      : data.name,
-          photo     : data.photo,
-          score     : 0,
-          eliminated: false,
-          removed   : false,
-          votes     : [],
-          color     : color(data.id)
-        })
+  return input.map( data => ({
+    id        : data.id,
+    name      : data.name,
+    photo     : data.photo,
+    score     : 0,
+    eliminated: false,
+    removed   : false,
+    votes     : [],
+    color     : color( data.id )
+  })
 }

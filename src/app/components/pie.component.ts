@@ -3,7 +3,6 @@
  */
 
 
-
 import { Directive, Input, Output, AfterViewInit, OnInit, ElementRef, Renderer, HostListener } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Candidate } from '../models/candidate';
@@ -11,7 +10,7 @@ import * as d3 from 'd3';
 import { Selection } from 'd3';
 import { Subject } from 'rxjs/Subject';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { mutable } from '../common/mutability';
+import { mutable } from '../models/mutability';
 
 @Directive( {
   selector: 'rcv-pie'
@@ -29,7 +28,7 @@ export class PieComponent implements OnInit, AfterViewInit {
   private arc;
   private innerCircleArc;
   private radius = () => Math.min( this.width, this.height ) / 5;
-    //outer circle ratios, change these ratios to change the size of the outer and inner circle
+  //outer circle ratios, change these ratios to change the size of the outer and inner circle
   private outerCirInnerRadius = 0.35;
   private outerCirOuterRadius = 2.25;
   private svg: Selection<any>;
@@ -124,9 +123,9 @@ export class PieComponent implements OnInit, AfterViewInit {
                        .attr( "d", this.innerCircleArc )
                        .attr( "fill", d => colorInner( d.data ) )
                        .each( d => {
-                         let which       = d.value < totalVotes / 2 ? 'active' : 'exhausted';
+                         let which = d.value < totalVotes / 2 ? 'active' : 'exhausted';
                          innerAngles[ which ] = d;
-                       });//stores current outerAngles as ._currentAng
+                       } );//stores current outerAngles as ._currentAng
 
           //Draws Inner Circle Labels
           innerCircleGs
@@ -176,7 +175,7 @@ export class PieComponent implements OnInit, AfterViewInit {
           arcs
               .transition().duration( 650 )
               .attrTween( "d", d => {
-                let interpolate = d3.interpolate( outerAngles[d.data.id], d );
+                let interpolate = d3.interpolate( outerAngles[ d.data.id ], d );
                 outerAngles[ d.data.id ] = interpolate( 0 );
                 return t => this.arc( interpolate( t ) )
               } );
@@ -194,38 +193,38 @@ export class PieComponent implements OnInit, AfterViewInit {
           //Updates the inner Circle with one less candidate
           innerCircleArcs
               .on( "mouseover", d => {
-                  innerCircleLabels.filter( d => d.endAngle - d.startAngle > .2 )
-                      .transition()
-                      .duration(350)
-                      .style( "opacity", 1);
-              })
-              .on ( "mouseout", d => {
-                  innerCircleLabels.transition()
-                      .duration(650)
-                      .style( "opacity", 0);
-              })
+                innerCircleLabels.filter( d => d.endAngle - d.startAngle > .2 )
+                                 .transition()
+                                 .duration( 350 )
+                                 .style( "opacity", 1 );
+              } )
+              .on( "mouseout", d => {
+                innerCircleLabels.transition()
+                                 .duration( 650 )
+                                 .style( "opacity", 0 );
+              } )
               .transition().duration( 650 )
               .attrTween( "d", d => {
-                let which = d.value < totalVotes / 2 ? 'active' : 'exhausted',
-                    interpolate = d3.interpolate( innerAngles[which], d );
+                let which       = d.value < totalVotes / 2 ? 'active' : 'exhausted',
+                    interpolate = d3.interpolate( innerAngles[ which ], d );
                 innerAngles[ which ] = interpolate( 0 );
                 return t => this.innerCircleArc( interpolate( t ) )
               } );
 
           //Updates the inner circle labels with one less candidate.
           innerCircleLabels
-              .style( "opacity", 0)
+              .style( "opacity", 0 )
               .on( "mouseover", d => {
-                  innerCircleLabels.filter( d => d.endAngle - d.startAngle > .2 )
-                      .transition()
-                      .duration(350)
-                      .style( "opacity", 1);
-              })
-              .on ( "mouseout", d => {
-                  innerCircleLabels.transition()
-                      .duration(650)
-                      .style( "opacity", 0);
-              })
+                innerCircleLabels.filter( d => d.endAngle - d.startAngle > .2 )
+                                 .transition()
+                                 .duration( 350 )
+                                 .style( "opacity", 1 );
+              } )
+              .on( "mouseout", d => {
+                innerCircleLabels.transition()
+                                 .duration( 650 )
+                                 .style( "opacity", 0 );
+              } )
               .attr( "transform", d => {
                 d.outerRadius = this.radius() * this.outerCirInnerRadius;
                 return `translate(${this.innerCircleArc.centroid( d )}) rotate(${0})`;
@@ -266,7 +265,7 @@ export class PieComponent implements OnInit, AfterViewInit {
 
 
 const outerAngles: {[id: string]: any} = {};
-const innerAngles = { 
-  active: null,
+const innerAngles = {
+  active   : null,
   exhausted: null
 };

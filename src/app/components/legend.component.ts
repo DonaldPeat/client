@@ -8,7 +8,7 @@ import { Candidate } from '../models/candidate';
 import * as d3 from 'd3';
 import { Subject } from 'rxjs/Subject';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { mutable } from '../common/mutability';
+import { mutable } from '../models/mutability';
 
 
 type Bar = {
@@ -106,7 +106,7 @@ export class LegendComponent implements OnInit, AfterViewInit {
                 color: cand.color,
                 label: cand.name,
                 icon : cand.photo,
-                name : cand.name.split(' ')[1]
+                name : cand.name.split( ' ' )[ 1 ]
               }) ).sort( (x, y)=> y.width - x.width );
 
         }

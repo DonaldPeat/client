@@ -1,6 +1,4 @@
-import { Candidate, CandidateData, candidate, candidates } from './candidate';
-
-      import * as SI from 'seamless-immutable';
+import { Candidate, CandidateData, candidates } from './candidate';
 import { Vote } from './vote';
 
 /**
@@ -32,9 +30,9 @@ export interface PollInput {
 
 export function poll(data: PollData): Poll {
   return {
-    title: data.title,
-    id: data.id,
-    candidates: candidates(data.candidates),
-    votes: data.votes
+    title     : data.title,
+    id        : data.id,
+    candidates: candidates( data.candidates ),
+    votes     : data.votes
   }
 }

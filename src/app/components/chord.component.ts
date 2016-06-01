@@ -10,7 +10,7 @@ import { Subject } from 'rxjs/Subject';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import * as d3 from 'd3';
 import { Selection } from 'd3';
-import { mutable } from '../common/mutability';
+import { mutable } from '../models/mutability';
 
 @Directive( {
   selector: 'rcv-chord'

@@ -4,7 +4,7 @@ import { RcvSimulatorContainer } from './components/sim.container';
 
 export const ROUTES: Routes = [
   {
-    path: '/',
+    path     : '/',
     component: RcvSimulatorContainer
   }
 

@@ -1,5 +1,4 @@
 import * as _ from 'lodash';
-import * as d3 from 'd3';
 import { Injectable } from '@angular/core';
 import { Candidate } from '../models/candidate';
 import { Vote } from '../models/vote';
@@ -7,8 +6,7 @@ import { Observable } from 'rxjs/Rx';
 import { Store } from '@ngrx/store';
 import { SimulationState } from '../reducers/sim.reducer';
 import { RcvActions } from '../actions';
-import { PollData, Poll } from '../models/poll';
-import { mutable } from '../common/mutability';
+import { Poll } from '../models/poll';
 
 
 @Injectable()
@@ -41,7 +39,7 @@ export class Simulation {
   }
 
   public removeCandidate(id: string): void {
-    this._store.dispatch(this.actions.candRemoved(id));
+    this._store.dispatch( this.actions.candRemoved( id ) );
   }
 
 
