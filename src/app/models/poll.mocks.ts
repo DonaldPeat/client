@@ -1,6 +1,6 @@
 
 
-import { Candidate  } from './candidate';
+import { Candidate, CandidateData } from './candidate';
 import { Vote } from './vote';
 import * as moment from 'moment';
 import { Moment } from 'moment';
@@ -14,17 +14,18 @@ import { Poll } from './poll';
 
 const now: Moment = moment();
 
-const candidates: Candidate[] = [
-    new Candidate("id-0", "Joe Fooey", "TODO"),
-    new Candidate("id-1", "Ima Huzenhousen", "TODO"),
-    new Candidate("id-2", "Nigel Ettelsworth", "TODO"),
+const candidates: CandidateData[] = [
+    {id: "id-0", name: "Joe Fooey", photo: "TODO"},
+  { id: "id-1", name: "Jane Booey", photo: "TODO" },
+  { id: "id-3", name: "Nigel Ett", photo: "TODO" },
+
 ];
 
 const votes: Vote[] = [
-    new Vote(["0", "1", "2"]),
-    new Vote(["1", "0", "2"]),
-    new Vote(["2", "1", "0"]),
-    new Vote(["2", "0", "1"])
+    {choices: ["0", "1", "2"]},
+    {choices: ["1", "0", "2"]},
+    {choices: ["2", "1", "0"]},
+    {choices: ["2", "0", "1"]}
 ];
 
 export const mockPoll: Poll = {
@@ -32,4 +33,4 @@ export const mockPoll: Poll = {
   title: "Dummy Poll",
   candidates: candidates,
   votes: votes 
-}
+};

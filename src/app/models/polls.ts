@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
-import { Poll, IPoll } from './poll';
+import { Poll, PollData } from './poll';
 
 @Injectable()
 export class Polls {
@@ -14,15 +14,12 @@ export class Polls {
 
 
 
-  public load(id: string): Observable<Poll> {
+  public load(id: string): Observable<PollData> {
     let uri = `${this.BACKEND_BASE_URI}/polls/${id}`;
     return Observable.of(DUMMY_DATA)
-                     .map(json => Poll.mutable(<IPoll>json));
+                     .map(json => <PollData> json);
   }
-  
-  public loadSync(id: string): IPoll {
-    return <IPoll> DUMMY_DATA
-  }
+
 
 }
 

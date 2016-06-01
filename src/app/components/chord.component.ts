@@ -5,11 +5,12 @@
 import * as _ from 'lodash';
 import { Directive, Input, OnInit, ElementRef, Renderer, HostListener, AfterViewInit } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
-import { Candidate } from '../models/candidate';
+import { Candidate, allyVotes } from '../models/candidate';
 import { Subject } from 'rxjs/Subject';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import * as d3 from 'd3';
 import { Selection } from 'd3';
+import { mutable } from '../common/mutability';
 
 @Directive( {
   selector: 'rcv-chord'
@@ -40,6 +41,20 @@ export class ChordComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
 
+    this.screenWidth$.next( this.element.nativeElement.clientWidth );
+
+    this.height = this.element.nativeElement.ownerDocument.body.clientHeight - 100;
+    this.width = this.element.nativeElement.clientWidth;
+
+    this.screenWidth$.next( this.width );
+    this.svg = d3.select( this.element.nativeElement )
+                 .append( 'svg' )
+                 .attr( 'width', `${this.width}` ) //set svg size
+                 .attr( 'height', `${this.height}` )
+                 .append( 'g' )
+                 .attr( "transform", `translate(${this.width / 2 },${this.height / 2})` ); //reposition diagram
+
+
     /**
      * We want to redraw/update the graphic every time the data changes, OR the size of the screen changes.
      * Observable.combineLatest says: "Anytime either of these changes, fire a new event with the latest value of each"
@@ -48,7 +63,7 @@ export class ChordComponent implements OnInit, AfterViewInit {
     Observable.combineLatest( this.cands$, this.screenWidth$, this.totalVotes$ ).subscribe(
         ([cands, width, totalVotes]) => {
           let tot         = cands.reduce( (sum, cand) => sum + cand.score, 1 ), //the total # of active votes
-              ids         = cands.map( cand =>cand.id ).sort(),
+              ids         = mutable( cands ).map( cand =>cand.id ).sort(),
 
               initMatrix  = ids.map( (id, idx)=> {
                 let ret = Array( ids.length ).fill( 0 );
@@ -57,10 +72,10 @@ export class ChordComponent implements OnInit, AfterViewInit {
               } ),
 
               voteMatrix  = cands.reduce( (resultArr, cand) => {
-                let allyVotes: {[id: string]: number} = cand.getInboundAllyVotes(),
-                    rowIdx                            = ids.indexOf( cand.id );
-                _.keys( allyVotes ).forEach( candId => {
-                  resultArr[ rowIdx ][ ids.indexOf( candId ) ] = allyVotes[ candId ];
+                let allies: {[id: string]: number} = allyVotes( cand ),
+                    rowIdx                         = ids.indexOf( cand.id );
+                _.keys( allies ).forEach( candId => {
+                  resultArr[ rowIdx ][ ids.indexOf( candId ) ] = allies[ candId ];
                 } );
                 return resultArr
               }, initMatrix ),
@@ -106,17 +121,16 @@ export class ChordComponent implements OnInit, AfterViewInit {
               exitingChords  = chords.exit();
 
           // chords.remove();
-
           // You were close here donald, remind me to explain why this needed to change
-          let chords = enteringChords
+          let chordPaths = enteringChords
               .append( "path" )
               .attr( 'class', 'chord' )
               .attr( "d", d3.svg.chord().radius( innerRadius ) )
               .style( "fill", function (d) { return fill( d.target.index ); } )
               .style( "opacity", 1 );
 
-          chords.filter( d => d.source.index == d.target.index )
-                .style( 'opacity', 0 );
+          chordPaths.filter( d => d.source.index == d.target.index )
+                    .style( 'opacity', 0 );
 
 
           exitingChords.remove();
@@ -130,19 +144,8 @@ export class ChordComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.screenWidth$.next( this.element.nativeElement.clientWidth );
-
-    this.height = this.element.nativeElement.ownerDocument.body.clientHeight - 100;
-    this.width = this.element.nativeElement.clientWidth;
-
     this.screenWidth$.next( this.width );
-    this.svg = d3.select( this.element.nativeElement )
-                 .append( 'svg' )
-                 .attr( 'width', `${this.width}` ) //set svg size
-                 .attr( 'height', `${this.height}` )
-                 .append( 'g' )
-                 .attr( "transform", `translate(${this.width / 2 },${this.height / 2})` ); //reposition diagram
-    this.screenWidth$.next( this.width );
+
   }
 
 }

@@ -1,90 +1,64 @@
 import * as _ from 'lodash';
-import { Vote } from './vote';
 import * as SI from 'seamless-immutable';
+import { Vote } from './vote';
+import * as d3 from 'd3';
+import { mutable } from '../common/mutability';
 
-/**
+      /**
  *
  *
  **/
 
-
-
-
-export interface ICandidate {
+export interface CandidateData { 
   id: string;
   name: string;
   photo: string;
+}
+
+export interface Candidate extends CandidateData{
   score: number;
   eliminated: boolean;
   removed: boolean;
-  votes?: Vote[];
-  color?: string;
+  votes: Vote[];
+  color: string;
 }
 
-
-export class Candidate implements ICandidate {
-  public eliminated: boolean = false;
-  public removed: boolean = false;
-  public score: number;
-  public votes: Vote[];
-
-  constructor(public id: string, public name: string, public photo: string){}
-  
-  public static mutable(input?:  Candidate | ICandidate): Candidate {
-
-    if (input && input instanceof Candidate) {
-      if (SI.isImmutable(input)){
-        let imm: SeamlessImmutable.ImmutableObjectMethods<Candidate> = <SeamlessImmutable.ImmutableObjectMethods<Candidate>> input;
-        return <Candidate> imm.asMutable({deep:true});
-      } else return <Candidate> input;
+export function allyVotes(candidate: Candidate): {[id: string]: number} {
+  let init: {[id: string]: number} = {};
+  return candidate.votes.reduce( (dict, vote)=> {
+    let myChoice = vote.choices.indexOf( candidate.id );
+    for (let i = 0; i < myChoice; i++) {
+      if (!dict[ vote.choices[ i ] ]) dict[ vote.choices[ i ] ] = 0;
+      dict[ vote.choices[ i ] ] += 1; //= dict[vote.choices[i]] + 1;
     }
-
-    if (!input) input = <ICandidate>{};
-
-    let id = input && input.id ? input.id : '',
-        name = input && input.name ? input.name : '',
-        photo = input && input.photo ? input.photo : '';
-
-    return new Candidate(id, name, photo);
-  }
-
-  public static immutable(input?: Candidate | ICandidate): ImmutableCandidate {
-    return SI<Candidate>(Candidate.mutable(input), {prototype: Candidate.prototype});
-  }
-  
-  public get isActive(){
-    return ! ( this.eliminated || this.removed);
-  }
-
-  /**
-   * todo rename up
-   * @param toId
-   * @returns {{}}
-   */
-  public getInboundAllyVotes(toId?: string):{[id:string]:number}  {
-    let init: {[id:string]:number} = {};
-    return this.votes.reduce((dict, vote)=>{
-      let myChoice = vote.choices.indexOf(this.id);
-      for (let i = 0; i < myChoice; i++){
-        if (!dict[vote.choices[i]]) dict[vote.choices[i]] = 0;
-        dict[vote.choices[i]] += 1; //= dict[vote.choices[i]] + 1;
-      }
-      return dict;
-    }, init);
-  }
-
-  public getOutboundAllyVotes(toId?: string):{[id:string]:number}  {
-    let init: {[id:string]:number} = {};
-    return this.votes.reduce((dict, vote)=>{
-      let myChoice = vote.choices.indexOf(this.id);
-      for (let i = 0; i > myChoice; i++){ // note > rather than <
-        if (!dict[vote.choices[i]]) dict[vote.choices[i]] = 0;
-        dict[vote.choices[i]] += 1; //= dict[vote.choices[i]] + 1;
-      }
-      return dict;
-    }, init);
-  }
-
+    return dict;
+  }, init );
 }
 
-export type ImmutableCandidate = Candidate & SeamlessImmutable.ImmutableObjectMethods<ICandidate>;
+export function candidate(data: CandidateData): Candidate { 
+  return { 
+    id: data.id,
+    name: data.name,
+    photo: data.photo,
+    score: 0,
+    eliminated: false,
+    removed: false,
+    votes: [],
+    color: ''
+  }
+}
+
+export function candidates(input: CandidateData[]): Candidate[] {
+  const color = d3.scale.category20b().domain( mutable(input.map( cand => cand.id )).sort() );
+
+        return input.map(data => ({
+          id        : data.id,
+          name      : data.name,
+          photo     : data.photo,
+          score     : 0,
+          eliminated: false,
+          removed   : false,
+          votes     : [],
+          color     : color(data.id)
+        })
+}
