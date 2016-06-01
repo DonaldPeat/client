@@ -45,6 +45,18 @@ export class Simulation {
   }
 
 
+  /**
+   * The sequence of values at the center of our application is the stream of what round we're in - all other streams in the
+   * application state are ultimately derived from this stream of numbers.
+   *
+   * What round we are in is purely a function of the sequence of clicks the user has made on the four navigational buttons:
+   * next, previous, end, and start.  This is a natural use-case for a reducer function, so we use scan(), which is something like an
+   * "async equivalent" of reduce() that emits an event for each result of the reducer function.
+
+   * e.g. Current round is 3, user clicks previous: (curr = 3, move = -1) => 3 + (-1) = 2 :: 2 is emitted as the current round
+   * https://github.com/Reactive-Extensions/RxJS/blob/master/doc/api/core/operators/scan.md
+   */
+
   public get round$(): Observable<number> {
     return this.state$.map( state => state.round );
   }
@@ -52,7 +64,6 @@ export class Simulation {
   /**
    * A stream of the IDs of candidates that the user has manually removed from the election
    */
-
   public get removed$(): Observable<string[]> {
     return this.state$.map( state => state.removed );
   }
@@ -71,6 +82,10 @@ export class Simulation {
         } ).startWith( [] );
   }
 
+  /**
+   * Which candidates hold what votes at any given time is purely a function of the choice preferences specified in the votes and
+   * which candidates have been eliminated or removed. We model it thusly.
+   */
   public get votes$(): Observable<{[id: string]: Vote[]}> {
     return this.eliminated$.withLatestFrom( this.pollData$, this.removed$,
         (elims, poll, removeds)=> {
@@ -78,13 +93,19 @@ export class Simulation {
         } );
   }
 
+  /**
+   * Simple convenience stream of the total number of unexhausted votes, mapped from the stream of vote distributions
+   */
   public get totalVotes$(): Observable<number> {
     return this.votes$.map( idVotesMap => {
       return _.reduce( idVotesMap, (sum = 0, votes, id)=> sum + votes.length, 0 )
     } );
   }
 
-
+  /**
+   * This is a convenience stream, wrapping the three streams above and returning their combined state as a single stream that can
+   * be easily passed around referenced in templates.
+   */
   public get candidates$(): Observable<Candidate[]> {
     return this.votes$.withLatestFrom( this.pollData$, this.eliminated$, this.removed$,
         (votes, poll, elims, removeds) => {
