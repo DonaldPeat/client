@@ -42,11 +42,6 @@ import { LegendComponent } from './legend.component';
            <rcv-chord [cands$]="cands$" [totalVotes$] = "totalVotes$" flex></rcv-chord>
          </div>
 
-
-          <!--div>The total number of votes: {{totalVotes$ | async}}</div>
-          <div *ngFor="let cand of cands$ | async">
-            <candidate-bar [candidate]="cand"></candidate-bar>
-        </div-->
     </div>
   `
 } )
