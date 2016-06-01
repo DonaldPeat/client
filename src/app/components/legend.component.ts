@@ -68,10 +68,6 @@ type Bar = {
           <div class="cand-name">{{bar.name}}</div>
         </div>
       </div>
-      <div layout="row"  layout-align="space-between center">
-        <div *ngFor="let bar of bars$ | async" 
-        [style.width.px]="bar.width" [style.max-width.px]="bar.width" [style.background-color]="bar.color" class="bar"></div>
-      </div>
   `
 } )
 export class LegendComponent implements OnInit, AfterViewInit {
