@@ -2,6 +2,8 @@
  * Created by Jeffrey on 5/14/2016.
  */
 
+
+
 import { Directive, Input, Output, AfterViewInit, OnInit, ElementRef, Renderer, HostListener } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Candidate } from '../models/candidate';
@@ -92,7 +94,7 @@ export class PieComponent implements OnInit, AfterViewInit {
                  .attr( 'class', 'arc' )
                  .attr( "d", this.arc )
                  .attr( "fill", d => d.data.color )
-                 .each( d => this.element.nativeElement._current = d ) //stores the current angles in ._current //
+                 .each( d => outerAngles[ d.data.id ] = d ) //stores the current outerAngles in ._current //
                  .on( "click", d => this.removals$.next( d.data.id ) );
 
           enterGs // Jeff: we can filter here so those labels are never placed (see comment on https://github.com/RCVSim/client/commit/9d5042d72c86f0e1da9e38737d8bfdd8abf8d703#diff-1b3d57e760bc62d6198570b6b2cc9ad4R110
@@ -121,7 +123,10 @@ export class PieComponent implements OnInit, AfterViewInit {
                        .attr( "class", "innerCircleArc" )
                        .attr( "d", this.innerCircleArc )
                        .attr( "fill", d => colorInner( d.data ) )
-                       .each( d => this.element.nativeElement._currentAng = d );//stores current angles as ._currentAng
+                       .each( d => {
+                         let which       = d.value < totalVotes / 2 ? 'active' : 'exhausted';
+                         innerAngles[ which ] = d;
+                       });//stores current outerAngles as ._currentAng
 
           //Draws Inner Circle Labels
           innerCircleGs
@@ -171,8 +176,8 @@ export class PieComponent implements OnInit, AfterViewInit {
           arcs
               .transition().duration( 650 )
               .attrTween( "d", d => {
-                let interpolate = d3.interpolate( this.element.nativeElement._current, d );
-                this.element.nativeElement._current = interpolate( 0 );
+                let interpolate = d3.interpolate( outerAngles[d.data.id], d );
+                outerAngles[ d.data.id ] = interpolate( 0 );
                 return t => this.arc( interpolate( t ) )
               } );
 
@@ -201,8 +206,9 @@ export class PieComponent implements OnInit, AfterViewInit {
               })
               .transition().duration( 650 )
               .attrTween( "d", d => {
-                let interpolate = d3.interpolate( this.element.nativeElement._currentAng, d );
-                this.element.nativeElement._currentAng = interpolate( 0 );
+                let which = d.value < totalVotes / 2 ? 'active' : 'exhausted',
+                    interpolate = d3.interpolate( innerAngles[which], d );
+                innerAngles[ which ] = interpolate( 0 );
                 return t => this.innerCircleArc( interpolate( t ) )
               } );
 
@@ -257,3 +263,10 @@ export class PieComponent implements OnInit, AfterViewInit {
   }
 
 }
+
+
+const outerAngles: {[id: string]: any} = {};
+const innerAngles = { 
+  active: null,
+  exhausted: null
+};
