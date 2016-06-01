@@ -9,7 +9,7 @@
     "core-js": "registry:dt/core-js#0.0.0+20160317120654",
     "jasmine": "registry:dt/jasmine#2.2.0+20160505161446",
     "node": "registry:dt/node#6.0.0+20160514165920",
-    "seamless-immutable": "github:epublic/browser/tools/manual-typings/seamless-immutable.d.ts#302e0797aa8e70622beda3b7f4090ab19ee48c89",
+    "seamless-immutable": "github:epublic/browser/tools/manual-typings/seamless-immutable.d.ts#8923bd6e4a8768cde689017b0bdd026e1ccd3455",
     "source-map": "registry:dt/source-map#0.0.0+20160317120654",
     "uglify-js": "registry:dt/uglify-js#2.6.1+20160316155526",
     "webpack": "registry:dt/webpack#1.12.9+20160321060707"

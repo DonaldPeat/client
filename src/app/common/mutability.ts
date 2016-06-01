@@ -1,6 +1,6 @@
 import * as SI from 'seamless-immutable';
 
-export function immutable<T>( it: T, asType?: Prototyped ): T & SeamlessImmutable.ImmutableObjectMethods<T> {
+export function immutable<T>( it: T, asType?: Prototyped ): T & Immutable.ObjectMethods<T> {
 
   if (asType) {
     let itt: {prototype?: any} = <{prototype?: any}> asType,
@@ -13,7 +13,7 @@ export function immutable<T>( it: T, asType?: Prototyped ): T & SeamlessImmutabl
 
 export function mutable<T>( it: T, deep: boolean = true ): T {
   if (SI.isImmutable( it )) {
-    let imm: SeamlessImmutable.ImmutableObjectMethods<T> = <SeamlessImmutable.ImmutableObjectMethods<T>> it; // #TypescriptProblems
+    let imm: Immutable.ObjectMethods<T> = <Immutable.ObjectMethods<T>> it; // #TypescriptProblems
     return imm.asMutable( { deep: deep } );
   }
   else return it;
