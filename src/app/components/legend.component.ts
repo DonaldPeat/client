@@ -36,7 +36,6 @@ type Bar = {
      }
      
      .entry.focused { 
-     font-size: 1.3em;
      font-weight: 600;
      }
      

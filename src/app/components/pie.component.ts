@@ -13,7 +13,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { mutable } from '../models/mutability';
 
 @Directive( {
-  selector: 'rcv-pie'
+  selector: 'rcv-pie',
 } )
 export class PieComponent implements OnInit, AfterViewInit {
 
@@ -53,7 +53,7 @@ export class PieComponent implements OnInit, AfterViewInit {
   constructor(private element: ElementRef, private renderer: Renderer) {
 
 
-    this.candHovered$ = this.candMouseOvers$.debounceTime(50);
+    this.candHovered$ = this.candMouseOvers$.debounceTime(25);
 
     this.candHovered$.subscribe( x => {
       console.log( 'hov' );
@@ -148,11 +148,7 @@ export class PieComponent implements OnInit, AfterViewInit {
                 let interpolate = d3.interpolate( this.outerAngles[ d.data.id ], d );
                 this.outerAngles[ d.data.id ] = interpolate( 0 );
                 return t => this.arc( interpolate( t ) )
-              } ).style( 'opacity', (d)=> {
-            if(hoveredCandidate && hoveredCandidate !== d.data.id) {
-              return 0;
-            } else return 1;
-          } );
+              } ).style( 'opacity', (d)=> (hoveredCandidate && hoveredCandidate !== d.data.id) ? 0.2 : 1);
 
 
 
@@ -207,7 +203,7 @@ export class PieComponent implements OnInit, AfterViewInit {
 
           //Updates the outer circle labels with one less candidate
           scoreLabels
-              .transition().duration( 150 )
+              .transition().duration( 100 )
               .attr( "transform", d => {
                 d.outerRadius = this.radius() * this.outerCirOuterRadius - this.outerCirOuterRadius * 0.2;
                 d.innerRadius = this.radius() * this.outerCirInnerRadius - this.outerCirInnerRadius * 0.2;
@@ -223,15 +219,15 @@ export class PieComponent implements OnInit, AfterViewInit {
               .on( "mouseover", d => {
                 innerCircleLabels.filter( d => d.endAngle - d.startAngle > .2 )
                                  .transition()
-                                 .duration( 150 )
+                                 .duration( 100 )
                                  .style( "opacity", 1 );
               } )
               .on( "mouseout", d => {
                 innerCircleLabels.transition()
-                                 .duration( 150 )
+                                 .duration( 100 )
                                  .style( "opacity", 0 );
               } )
-              .transition().duration( 150 )
+              .transition().duration( 100 )
               .attrTween( "d", d => {
                 let which       = d.value < totalVotes / 2 ? 'active' : 'exhausted',
                     interpolate = d3.interpolate( innerAngles[ which ], d );
@@ -245,12 +241,12 @@ export class PieComponent implements OnInit, AfterViewInit {
               .on( "mouseover", d => {
                 innerCircleLabels.filter( d => d.endAngle - d.startAngle > .2 )
                                  .transition()
-                                 .duration( 150 )
+                                 .duration( 100 )
                                  .style( "opacity", 1 );
               } )
               .on( "mouseout", d => {
                 innerCircleLabels.transition()
-                                 .duration( 150 )
+                                 .duration( 100 )
                                  .style( "opacity", 0 );
               } )
               .attr( "transform", d => {

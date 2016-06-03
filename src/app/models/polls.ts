@@ -16,6 +16,11 @@ export class Polls {
     let uri = `${this.BACKEND_BASE_URI}/polls/${id}`;
     return Observable.of( DUMMY_DATA )
                      .map( json => <PollData> json );
+
+    /*return this.http.get('assets/data/oakland.json')
+        .map(res => res.json())
+        .map(json => <PollData> json)*/;
+
   }
 
 

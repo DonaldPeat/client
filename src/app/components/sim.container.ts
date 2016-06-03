@@ -28,7 +28,14 @@ import { ChordComponent } from './chord.component';
                  (candHovered$)="sim.setHoveredCandidate($event)"  
                   flex>          
         </rcv-pie>
-        <rcv-chord [cands$]="sim.candidates$" [totalVotes$]="sim.totalVotes$" flex></rcv-chord>
+        <rcv-chord [cands$]="sim.candidates$" 
+                   [totalVotes$]="sim.totalVotes$" 
+                   [hoveredCand$]="sim.hoveredCandidate$"
+                   (candHovered$)="sim.setHoveredCandidate($event)"
+                   flex></rcv-chord>
+                   
+                   
+                   
       </div>
     `
 } )
