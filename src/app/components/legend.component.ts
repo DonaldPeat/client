@@ -32,7 +32,18 @@ type Bar = {
         position: relative;
         white-space: nowrap;;
         height: 70px;
+        transition: 250ms linear all;
      }
+     
+     .entry.focused { 
+     font-size: 1.3em;
+     font-weight: 600;
+     }
+     
+     .entry.unfocused { 
+        font-weight: 100;
+     }
+     
     .bar {
       height: 20px;
       transition: 500ms linear all;
@@ -46,25 +57,21 @@ type Bar = {
     .cand-name{ 
         overflow: visible;
         margin: 5px 0;
+        transition: 300ms linear all;
      }
      
      .cand-name.small {
         font-size: 0.8em;
      }
-     
-     .invisible .cand-name{ 
-        visibility: hidden;
-     }
-     
-     .invisible:hover .cand-name{ 
-        visibility: visible;
-     }
     
   ` ],
   template: `
       <div layout="row" layout-align="space-between center">
-        <div *ngFor="let bar of bars$ | async" class="entry" layout="column" layout-align="start center" flex>
-            <div [style.background-color]="bar.color" class="bar"></div>
+        <div *ngFor="let bar of bars$ | async" class="entry"  layout="column" layout-align="start center"  
+             [class.focused]="bar.isFocused" [class.unfocused]="bar.isUnfocused"  flex >
+        
+        
+            <div [style.background-color]="bar.color" class="bar" ></div>
           <div class="cand-name">{{bar.name}}</div>
         </div>
       </div>
@@ -73,12 +80,15 @@ type Bar = {
 export class LegendComponent implements OnInit, AfterViewInit {
 
   @Input() cands$: Observable<Candidate[]>;
+  @Input() hoveredCand$: Observable<string>;
 
   private bars$: Observable<Bar[]>;
 
   private screenWidth$: Subject<number> = BehaviorSubject.create();
   private wid: (val: number) => number;
   private color: (id: string) => string;
+  private isHovered$: Observable<boolean>;
+  private widthFxn: Observable<(val: number)=> number>;
 
   @HostListener( 'window:resize', [ '$event' ] )
   private onResize($event) {
@@ -90,15 +100,15 @@ export class LegendComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-
-
-    this.bars$ = Observable.combineLatest( this.screenWidth$, this.cands$,
-        (width, cands) => {
+    
+    this.bars$ = Observable.combineLatest( this.screenWidth$, this.cands$, this.hoveredCand$,
+        (width, cands, hovered) => {
           let actives = cands.filter( cand => cand.isActive ), // don't include eliminated candidates
               tot     = actives.reduce( (sum, cand) => sum + cand.score, 0 ), //the total # of active votes
               wid     = d3.scale.linear()
                           .domain( [ 0, tot ] ) // scale from 0 to 100% of the votes
-                          .range( [ 0, width || 0 ] ); //mapped to 0 to full width of screen
+                          .range( [ 0, width || 0 ] ),
+              name = (cand)=> hovered && hovered === cand.id ? cand.name : cand.name.split( ' ' )[ 1 ]; //mapped to 0 to full width of screen
 
           return mutable( cands ).map( cand=>
               ( <Bar>{
@@ -106,13 +116,18 @@ export class LegendComponent implements OnInit, AfterViewInit {
                 color: cand.color,
                 label: cand.name,
                 icon : cand.photo,
-                name : cand.name.split( ' ' )[ 1 ]
-              }) ).sort( (x, y)=> y.width - x.width );
+                name : name(cand),
+                isFocused: hovered && hovered === cand.id,
+                isUnfocused: hovered && hovered !== cand.id
+              }) ).sort( (x, y)=> x.width - y.width );
 
         }
     );
 
   }
+
+
+
 
   ngAfterViewInit() { //TODO  do this through renderer to be platform-safe
     this.screenWidth$.next( this.element.nativeElement.clientWidth );

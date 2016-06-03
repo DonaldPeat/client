@@ -8,6 +8,7 @@ import { SimulationState } from '../state.shape';
 const initialState = SI<SimulationState>( {
   round  : 1,
   removed: [],
+  hovered: '',
   poll   : null
 } );
 
@@ -31,6 +32,9 @@ export const sim: ActionReducer<SimulationState & Immutable.ObjectMethods<Simula
                      case RcvActions.POLL_DATA_LOADED:
                        let data: PollData = <PollData> action.payload;
                        return state.set( 'poll', poll( data ) );
+
+                     case RcvActions.CAND_HOVERED:
+                       return state.set('hovered', <string>action.payload);
 
                      default:
                        return state;

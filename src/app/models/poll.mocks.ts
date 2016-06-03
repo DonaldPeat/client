@@ -30,5 +30,6 @@ export const mockPoll: Poll = {
   id        : 'id-mock-poll',
   title     : "Dummy Poll",
   candidates: candidates,
-  votes     : votes
+  votes     : votes,
+  hovered: ''
 };

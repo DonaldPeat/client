@@ -8,7 +8,6 @@ export class RcvActions {
 
 
   static LOAD_POLL_DATA = "LOAD_POLL_DATA";
-
   public loadPollData(id: string): Action {
     return {
       type   : RcvActions.LOAD_POLL_DATA,
@@ -17,7 +16,6 @@ export class RcvActions {
   }
 
   static POLL_DATA_LOADED = "POLL_DATA_LOADED";
-
   public pollDataLoaded(data: PollData): Action {
     return {
       type   : RcvActions.POLL_DATA_LOADED,
@@ -26,7 +24,6 @@ export class RcvActions {
   }
 
   static NEXT_ROUND = "NEXT_ROUND";
-
   public nextRound(): Action {
     return {
       type: RcvActions.NEXT_ROUND
@@ -34,7 +31,6 @@ export class RcvActions {
   }
 
   static PREV_ROUND = "PREV_ROUND";
-
   public prevRound(): Action {
     return {
       type: RcvActions.PREV_ROUND
@@ -42,7 +38,6 @@ export class RcvActions {
   }
 
   static SKIP_TO_START = "SKIP_TO_START";
-
   public skipToStart(): Action {
     return {
       type: RcvActions.SKIP_TO_START
@@ -50,7 +45,6 @@ export class RcvActions {
   }
 
   static SKIP_TO_END = "SKIP_TO_END";
-
   public skipToEnd(): Action {
     return {
       type: RcvActions.SKIP_TO_END
@@ -58,7 +52,6 @@ export class RcvActions {
   }
 
   static CAND_REMOVED = "CAND_REMOVED";
-
   public candRemoved(id: string): Action {
     return {
       type   : RcvActions.CAND_REMOVED,
@@ -67,11 +60,18 @@ export class RcvActions {
   }
 
   static CAND_UNREMOVED = "CAND_UNREMOVED";
-
   public candUnremoved(id: string): Action {
     return {
       type   : RcvActions.CAND_UNREMOVED,
       payload: id
+    }
+  }
+
+  static CAND_HOVERED = "CAND_HOVERED";
+  public candHovered(id?: string): Action {
+    return {
+      type   : RcvActions.CAND_HOVERED,
+      payload: id || ''
     }
   }
 

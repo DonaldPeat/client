@@ -98,9 +98,9 @@ export class ChordComponent implements OnInit, AfterViewInit {
                         .sortGroups( d3.descending )
                         .sortSubgroups( d3.descending )
                         .sortChords( d3.descending )
-                        .matrix( voteMatrix ),
+                        .matrix( voteMatrix );
 
-                    chordTween = (layout) => {
+/*                    chordTween = (layout) => {
                         return (d,i) => {
                             if ( layout.chords ) {
                                let inter = d3.interpolate(layout.chords()[i], d);
@@ -111,7 +111,7 @@ export class ChordComponent implements OnInit, AfterViewInit {
                                 return;
                             }
                         }
-                    };
+                    };*/
 
                 //the arcs that form the outer circle
                 let arcs         = this.svg.selectAll( '.cand-arc' ).data( chord.groups ),
@@ -151,12 +151,12 @@ export class ChordComponent implements OnInit, AfterViewInit {
 
                 exitingChords.remove();
 
-                chords
+           /*     chords
                     .data( chord.chords )
-                    .transition()
+                //    .transition()
                     .duration(650)
                     .attrTween("d", chordTween(last_chord));
-
+*/
                 last_chord = chord;
 
                 // todo:clear svg before updating data

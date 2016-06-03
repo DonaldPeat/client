@@ -41,8 +41,11 @@ export class Simulation {
   public removeCandidate(id: string): void {
     this._store.dispatch( this.actions.candRemoved( id ) );
   }
-
-
+  
+  public setHoveredCandidate(id?: string): void {
+    this._store.dispatch(this.actions.candHovered(id));
+  }
+  
   /**
    * The sequence of values at the center of our application is the stream of what round we're in - all other streams in the
    * application state are ultimately derived from this stream of numbers.
@@ -120,6 +123,11 @@ export class Simulation {
         }
     );
 
+  }
+  
+  
+  public get hoveredCandidate$(): Observable<string> {
+    return this.state$.map(state => state.hovered);
   }
 
 

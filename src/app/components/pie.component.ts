@@ -19,8 +19,10 @@ export class PieComponent implements OnInit, AfterViewInit {
 
   @Input() cands$: Observable<Candidate[]>;
   @Input() totalVotes$: Observable<number>;
+  @Input() hoveredCand$: Observable<string>;
   @Output() removals$: Subject<string[]> = BehaviorSubject.create();
-  @Output() hoverCand$: Subject<string> = BehaviorSubject.create();
+  @Output() candHovered$: Observable<string>;
+
 
   private height;
   private width;
@@ -34,6 +36,10 @@ export class PieComponent implements OnInit, AfterViewInit {
   private svg: Selection<any>;
   private g: any;
   private screenWidth$: Subject<number> = BehaviorSubject.create();
+  private candMouseOvers$: Subject<string> = BehaviorSubject.create();
+  private candMouseOuts$: Subject<string> = BehaviorSubject.create();
+
+  private outerAngles: {[id: string]: any} = {};
 
   @HostListener( "window:resize" )
   private onResize(event) {
@@ -46,33 +52,61 @@ export class PieComponent implements OnInit, AfterViewInit {
 
   constructor(private element: ElementRef, private renderer: Renderer) {
 
+
+    this.candHovered$ = this.candMouseOvers$.debounceTime(50);
+
+    this.candHovered$.subscribe( x => {
+      console.log( 'hov' );
+      console.log( x )
+    } )
   }
 
 
   ngOnInit() {
+
+
 
     /**
      * We want to redraw/update the graphic every time the data changes, OR the size of the screen changes.
      * Observable.combineLatest says: "Anytime either of these changes, fire a new event with the latest value of each"
      * So, we subscribe to that and run our viz update logic each time it fires.
      */
-    Observable.combineLatest( this.cands$, this.screenWidth$, this.totalVotes$ ).subscribe(
-        ([cands, width, totalVotes]) => {
+    Observable.combineLatest( this.cands$, this.screenWidth$, this.totalVotes$, this.hoveredCand$ ).subscribe(
+        ([cands, width, totalVotes, hoveredCandidate]) => {
           console.log( 'WIDTH: ' + width );
           this.svg.attr( 'width', width ); // update the screen width - if it hasn't changed, this has no effect
           this.g.attr( "transform", `translate(${this.width / 2 },${this.height / 2})` );
 
-          let actives       = mutable( cands ).filter( cand => !(cand.eliminated || cand.removed) ), // don't include eliminated candidates
-              tot           = actives.reduce( (sum, cand) => sum + cand.score, 0 ), //the total # of active votes
-              numVotes      = [ tot, totalVotes - tot ],
-              colorInner    = d3.scale.category10(),
-              percentFormat = d3.format( ".0%" ),
-              outerPie      = d3.layout.pie().value( d => !(d.eliminated || d.removed) ? d.score : 0 ), // Jeff/donald disregard this warning - inaccuracy in the typedef
-              innerPie      = d3.layout.pie(),
-              angle         = (d) => {
-                let i = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
-                return i > 90 ? i - 180 : i;
-              };
+          const actives       = mutable( cands ).filter( cand => !(cand.eliminated || cand.removed) ), // don't include eliminated candidates
+                tot           = actives.reduce( (sum, cand) => sum + cand.score, 0 ), //the total # of active votes
+                numVotes      = [ tot, totalVotes - tot ],
+                colorInner    = d3.scale.category10(),
+                percentFormat = d3.format( ".0%" ),
+                outerPie      = d3.layout.pie().value( d => !(d.eliminated || d.removed) ? d.score : 0 ), // Jeff/donald disregard this warning - inaccuracy in the typedef
+                innerPie      = d3.layout.pie(),
+                angle         = (d) => {
+                  let i = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
+                  return i > 90 ? i - 180 : i;
+                },
+                overFxn       = ()=> {
+                  /*This */
+                  const over$ = this.candMouseOvers$;
+                  return d => {
+                    //NOTE, we DO NOT have lexically-scoped this here!!  
+                    over$.next( d.data.id ); //Send a string to candMouseOvers$ stream
+                  }
+                },
+                outFxn        = ()=> {
+                  const out$ = this.candMouseOvers$;
+                  return d => {
+                    out$.next('')
+                  }
+                },
+
+                arcTween = (id)=> {
+                  const _cId = id;
+                };
+
 
           //A single selection for each candidate; bind every elements to this single selection
           let candGs      = this.g.selectAll( '.cand-g' ).data( outerPie( cands ), d => d.data.id ),
@@ -82,19 +116,14 @@ export class PieComponent implements OnInit, AfterViewInit {
           let enterGs = candGEnters
               .append( 'g' ).attr( 'class', 'cand-g' );
 
-          /*JEFF: take a close look at this refactor. The biggest thing to note is that, rather than creating a separate selection
-           * for every type of element we want to add for each candidate, we add a SINGLE selection for each candidate, bind that
-           * selection to a g, and then add append the necessary elements for each candidate to "their" g. This makes it more
-           * readable and easier to maintain, and makes it trivial to move / remove or otherwise alter all the elements for a candidate
-           * at once (which is only somewhat helpful for us here, but in other use-cases is hugely helpful)
-           *
-           * */
           enterGs.append( "path" )
                  .attr( 'class', 'arc' )
                  .attr( "d", this.arc )
                  .attr( "fill", d => d.data.color )
-                 .each( d => outerAngles[ d.data.id ] = d ) //stores the current outerAngles in ._current //
-                 .on( "click", d => this.removals$.next( d.data.id ) );
+                 .each( d => this.outerAngles[ d.data.id ] = d ) //stores the current outerAngles in ._current //
+                 .on( "click", d => this.removals$.next( d.data.id ) )
+                 .on( "mouseover", overFxn() )
+                 .on( "mouseout", outFxn() );
 
           enterGs // Jeff: we can filter here so those labels are never placed (see comment on https://github.com/RCVSim/client/commit/9d5042d72c86f0e1da9e38737d8bfdd8abf8d703#diff-1b3d57e760bc62d6198570b6b2cc9ad4R110
               .append( "text" )
@@ -108,7 +137,24 @@ export class PieComponent implements OnInit, AfterViewInit {
               } )
               .style( "fill", "white" )
               .text( d => percentFormat( d.value / tot ) )
+              .text( d => percentFormat( d.value / tot ) )
               .on( "click", d => this.removals$.next( d.data.id ) );
+
+          let arcs = candGs.select( '.arc' ),
+              scoreLabels = candGs.select( '.txt' );
+
+          arcs.transition().duration( 650 )
+              .attrTween( "d", d => {
+                let interpolate = d3.interpolate( this.outerAngles[ d.data.id ], d );
+                this.outerAngles[ d.data.id ] = interpolate( 0 );
+                return t => this.arc( interpolate( t ) )
+              } ).style( 'opacity', (d)=> {
+            if(hoveredCandidate && hoveredCandidate !== d.data.id) {
+              return 0;
+            } else return 1;
+          } );
+
+
 
           //Draws inner circle
           let innerCircle        = this.g.selectAll( '.innerCircle-g' ).data( innerPie( numVotes ) ),
@@ -141,48 +187,27 @@ export class PieComponent implements OnInit, AfterViewInit {
               .style( "font-size", "18px" )
               .text( d => percentFormat( d.value / totalVotes ) );
 
-          let arcs              = candGs.select( '.arc' ),
-              scoreLabels       = candGs.select( '.txt' ),
-              innerCircleArcs   = innerCircle.select( '.innerCircleArc' ),
+          let innerCircleArcs   = innerCircle.select( '.innerCircleArc' ),
               innerCircleLabels = innerCircle.select( '.innerTxt' );
 
-          //Removes a eliminated candidate from our visualization elements
-          let setAllGsOpacity = (value) => {
+
+
+/* Jeff, I get what you were going for here, and I support it 100%: In general, any time you find yourself writing the same code
+  over and over again, your instinct to wrap it in a function and reuse it is spot on. However, when doing that you've got to be
+  make sure that that function only does what you expect it to, based on the name. Also (sortof implied), it's important that functions
+  - especially little utility ones like this - do ONE THING: It be more lines of code to break it into several functions and call
+  them separately, but (unless you're 100% sure that they'll always need to be done together) those are good extra lines of code.
+   */
+
+          let hideEliminatedCandidates = (value) => {
             //Little Hack; filter the ones that are too small to see to opacity 0, else their opacity is the value
             arcs.filter( d => !d.data.eliminated ).style( "opacity", value );
-            scoreLabels.filter( d => d.data.eliminated || d.endAngle - d.startAngle < .2 ).style( "opacity", 0 );
-            scoreLabels.filter( d => !d.data.eliminated && d.endAngle - d.startAngle > .2 ).style( "opacity", value );
             innerCircleArcs.style( "opacity", value );
           };
 
-          setAllGsOpacity( 1 ); // set visible elements' opacity to 1
-
-          arcs.on( "mouseover", d => {
-            let opacityValue = 0.3;
-
-            setAllGsOpacity( opacityValue ); // set every visible elements' opacity to this opacityValue
-
-            arcs.filter( t => t.data.id == d.data.id ).style( "opacity", 1 ); //set this arc's opacity to 1
-            scoreLabels.filter( t => t.data.id == d.data.id ).style( "opacity", 1 ); //set this scoreLabel's opacity to 1
-
-            this.hoverCand$.next( d.data.id ); //Send a string to hoverCand$ stream
-          } )
-              .on( "mouseout", () => {
-                setAllGsOpacity( 1 ); //normalize every visible elements' opacity
-              } );
-
-          //Updates the outerCircle with one less candidate
-          arcs
-              .transition().duration( 650 )
-              .attrTween( "d", d => {
-                let interpolate = d3.interpolate( outerAngles[ d.data.id ], d );
-                outerAngles[ d.data.id ] = interpolate( 0 );
-                return t => this.arc( interpolate( t ) )
-              } );
-
           //Updates the outer circle labels with one less candidate
           scoreLabels
-              .transition().duration( 650 )
+              .transition().duration( 150 )
               .attr( "transform", d => {
                 d.outerRadius = this.radius() * this.outerCirOuterRadius - this.outerCirOuterRadius * 0.2;
                 d.innerRadius = this.radius() * this.outerCirInnerRadius - this.outerCirInnerRadius * 0.2;
@@ -190,20 +215,23 @@ export class PieComponent implements OnInit, AfterViewInit {
               } )
               .text( d => percentFormat( d.value / tot ) );
 
+          scoreLabels.filter( d => d.data.eliminated || d.endAngle - d.startAngle < .2 ).style( "opacity", 0 );
+
+
           //Updates the inner Circle with one less candidate
           innerCircleArcs
               .on( "mouseover", d => {
                 innerCircleLabels.filter( d => d.endAngle - d.startAngle > .2 )
                                  .transition()
-                                 .duration( 350 )
+                                 .duration( 150 )
                                  .style( "opacity", 1 );
               } )
               .on( "mouseout", d => {
                 innerCircleLabels.transition()
-                                 .duration( 650 )
+                                 .duration( 150 )
                                  .style( "opacity", 0 );
               } )
-              .transition().duration( 650 )
+              .transition().duration( 150 )
               .attrTween( "d", d => {
                 let which       = d.value < totalVotes / 2 ? 'active' : 'exhausted',
                     interpolate = d3.interpolate( innerAngles[ which ], d );
@@ -217,12 +245,12 @@ export class PieComponent implements OnInit, AfterViewInit {
               .on( "mouseover", d => {
                 innerCircleLabels.filter( d => d.endAngle - d.startAngle > .2 )
                                  .transition()
-                                 .duration( 350 )
+                                 .duration( 150 )
                                  .style( "opacity", 1 );
               } )
               .on( "mouseout", d => {
                 innerCircleLabels.transition()
-                                 .duration( 650 )
+                                 .duration( 150 )
                                  .style( "opacity", 0 );
               } )
               .attr( "transform", d => {
@@ -264,7 +292,6 @@ export class PieComponent implements OnInit, AfterViewInit {
 }
 
 
-const outerAngles: {[id: string]: any} = {};
 const innerAngles = {
   active   : null,
   exhausted: null

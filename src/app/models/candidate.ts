@@ -58,5 +58,5 @@ export function candidates(input: CandidateData[]): Candidate[] {
     removed   : false,
     votes     : [],
     color     : color( data.id )
-  })
+  }));
 }
