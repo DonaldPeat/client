@@ -208,6 +208,8 @@ export class PieComponent implements OnInit, AfterViewInit {
               .text( d => percentFormat( d.value / tot ) );
 
           scoreLabels.filter( d => d.data.eliminated || d.endAngle - d.startAngle < .2 ).style( "opacity", 0 );
+            scoreLabels.filter(d =>!(d.data.eliminated || d.endAngle - d.startAngle< .2)).style("opacity", 1 );
+
 
 
           //Updates the inner Circle with one less candidate
