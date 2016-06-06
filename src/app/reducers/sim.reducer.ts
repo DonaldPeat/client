@@ -23,7 +23,10 @@ export const sim:ActionReducer<SimulationState & Immutable.ObjectMethods<Simulat
                 }
                 return state.set('round', state.round);
             case RcvActions.NEXT_ROUND:
-                return state.set('round', state.round + 1);
+                if (state.round < 12) {   //temp implementation for this particular data set
+                    return state.set('round', state.round + 1)
+                }
+                return state.set('round', state.round);
             case RcvActions.SKIP_TO_START:
                 return state.set('round', 1);
             case RcvActions.SKIP_TO_END:
