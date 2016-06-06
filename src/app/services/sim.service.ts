@@ -38,6 +38,9 @@ export class Simulation {
     this._store.dispatch( this.actions.skipToStart() );
   }
 
+  public skipToEnd(): void {
+    this._store.dispatch( this.actions.skipToEnd() );
+  }
   public removeCandidate(id: string): void {
     this._store.dispatch( this.actions.candRemoved( id ) );
   }

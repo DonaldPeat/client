@@ -20,6 +20,7 @@ import { ChordComponent } from './chord.component';
                     (next)="sim.nextRound()" 
                     (prev)="sim.prevRound()" 
                     (start)="sim.skipToStart()"
+                    (end) = "sim.skipToEnd()"
                     [round]="sim.round$ | async" ></rcv-controls>
       <div layout="row" layout-align="space-around stretch">
         <rcv-pie [cands$]="sim.candidates$" 
