@@ -18,7 +18,9 @@ export const sim: ActionReducer<SimulationState & Immutable.ObjectMethods<Simula
 
                    switch (action.type) {
                      case RcvActions.PREV_ROUND:
-                       return state.set( 'round', state.round - 1 );
+                         if (state.round != 0){
+                          return state.set( 'round', state.round - 1 )}
+                         return state.set('round',state.round);
                      case RcvActions.NEXT_ROUND:
                        return state.set( 'round', state.round + 1 );
                      case RcvActions.SKIP_TO_START:
