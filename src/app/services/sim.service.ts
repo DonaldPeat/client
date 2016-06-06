@@ -41,6 +41,10 @@ export class Simulation {
   public removeCandidate(id: string): void {
     this._store.dispatch( this.actions.candRemoved( id ) );
   }
+
+  public unremoveCandidate(id: string){
+    this._store.dispatch(this.actions.candUnremoved(id));
+  }
   
   public setHoveredCandidate(id?: string): void {
     this._store.dispatch(this.actions.candHovered(id));

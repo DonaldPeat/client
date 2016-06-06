@@ -13,7 +13,8 @@ import { ChordComponent } from './chord.component';
   styles    : [ `.controls { align-self: center; margin: 5px 0;  }` ],
   template  : `
       <rcv-legend [cands$]="sim.candidates$"
-                  [hoveredCand$]="sim.hoveredCandidate$"          
+                  [hoveredCand$]="sim.hoveredCandidate$"    
+                  (unremoved$)="sim.unremoveCandidate($event)"      
       ></rcv-legend>
       <rcv-controls class="controls"
                     (next)="sim.nextRound()" 
@@ -24,7 +25,7 @@ import { ChordComponent } from './chord.component';
         <rcv-pie [cands$]="sim.candidates$" 
                  [totalVotes$]="sim.totalVotes$" 
                  [hoveredCand$]="sim.hoveredCandidate$"
-                 (removals$)="removals$.next($event)" 
+                 (candRemoved$)="sim.removeCandidate($event)" 
                  (candHovered$)="sim.setHoveredCandidate($event)"  
                   flex>          
         </rcv-pie>
