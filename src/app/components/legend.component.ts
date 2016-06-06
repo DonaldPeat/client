@@ -2,7 +2,7 @@
  * Created by moore on 5/4/2016.
  */
 
-import { Component, Input, AfterViewInit, OnInit, ElementRef, Renderer, HostListener } from '@angular/core';
+import { Component, Input, AfterViewInit, OnInit, ElementRef, Renderer, HostListener, Output, EventEmitter } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Candidate } from '../models/candidate';
 import * as d3 from 'd3';
@@ -33,6 +33,7 @@ type Bar = {
         white-space: nowrap;;
         height: 70px;
         transition: 250ms linear all;
+        cursor: pointer;
      }
      
      .entry.focused { 
@@ -41,6 +42,10 @@ type Bar = {
      
      .entry.unfocused { 
         font-weight: 100;
+     }
+     
+     .entry.removed {
+        color: red;
      }
      
     .bar {
@@ -67,7 +72,7 @@ type Bar = {
   template: `
       <div layout="row" layout-align="space-between center">
         <div *ngFor="let bar of bars$ | async" class="entry"  layout="column" layout-align="start center"  
-             [class.focused]="bar.isFocused" [class.unfocused]="bar.isUnfocused"  flex >
+             [class.focused]="bar.isFocused" [class.unfocused]="bar.isUnfocused"  [class.removed]="bar.isRemoved" (click)="candClicked(bar)" flex >
         
         
             <div [style.background-color]="bar.color" class="bar" ></div>
@@ -80,6 +85,7 @@ export class LegendComponent implements OnInit, AfterViewInit {
 
   @Input() cands$: Observable<Candidate[]>;
   @Input() hoveredCand$: Observable<string>;
+  @Output() unremoved$ = new EventEmitter<string>();
 
   private bars$: Observable<Bar[]>;
 
@@ -113,9 +119,11 @@ export class LegendComponent implements OnInit, AfterViewInit {
               ( <Bar>{
                 width: wid( cand.score ),
                 color: cand.color,
+                id: cand.id,
                 label: cand.name,
                 icon : cand.photo,
                 name : name(cand),
+                isRemoved: cand.removed,
                 isFocused: hovered && hovered === cand.id,
                 isUnfocused: hovered && hovered !== cand.id
               }) ).sort( (x, y)=> x.width - y.width );
@@ -125,6 +133,12 @@ export class LegendComponent implements OnInit, AfterViewInit {
 
   }
 
+  private candClicked(cand){
+    debugger;
+    if (cand.isRemoved){
+      this.unremoved$.emit( cand.id );
+    }
+  }
 
 
 

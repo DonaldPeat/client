@@ -20,7 +20,7 @@ export class PieComponent implements OnInit, AfterViewInit {
   @Input() cands$: Observable<Candidate[]>;
   @Input() totalVotes$: Observable<number>;
   @Input() hoveredCand$: Observable<string>;
-  @Output() removals$: Subject<string[]> = BehaviorSubject.create();
+  @Output() candRemoved$: Subject<string[]> = BehaviorSubject.create();
   @Output() candHovered$: Observable<string>;
 
 
@@ -101,12 +101,7 @@ export class PieComponent implements OnInit, AfterViewInit {
                   return d => {
                     out$.next('')
                   }
-                },
-
-                arcTween = (id)=> {
-                  const _cId = id;
-                };
-
+                }
 
           //A single selection for each candidate; bind every elements to this single selection
           let candGs      = this.g.selectAll( '.cand-g' ).data( outerPie( cands ), d => d.data.id ),
@@ -120,8 +115,9 @@ export class PieComponent implements OnInit, AfterViewInit {
                  .attr( 'class', 'arc' )
                  .attr( "d", this.arc )
                  .attr( "fill", d => d.data.color )
+                 .style('cursor', 'crosshair')
                  .each( d => this.outerAngles[ d.data.id ] = d ) //stores the current outerAngles in ._current //
-                 .on( "click", d => this.removals$.next( d.data.id ) )
+                 .on( "click", d => this.candRemoved$.next( d.data.id ) )
                  .on( "mouseover", overFxn() )
                  .on( "mouseout", outFxn() );
 
@@ -138,7 +134,7 @@ export class PieComponent implements OnInit, AfterViewInit {
               .style( "fill", "white" )
               .text( d => percentFormat( d.value / tot ) )
               .text( d => percentFormat( d.value / tot ) )
-              .on( "click", d => this.removals$.next( d.data.id ) );
+              .on( "click", d => this.candRemoved$.next( d.data.id ) );
 
           let arcs = candGs.select( '.arc' ),
               scoreLabels = candGs.select( '.txt' );
